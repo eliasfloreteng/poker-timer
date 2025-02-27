@@ -192,11 +192,11 @@ export function LevelList({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <Settings2 className="h-4 w-4 mr-2" />
-                Presets
+                Load Preset
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Default Presets</DropdownMenuLabel>
+              <DropdownMenuLabel>Built-in Presets</DropdownMenuLabel>
               {presets
                 .filter((p) => p.isDefault)
                 .map((preset) => (
@@ -211,7 +211,7 @@ export function LevelList({
               {presets.some((p) => !p.isDefault) && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Custom Presets</DropdownMenuLabel>
+                  <DropdownMenuLabel>Your Custom Presets</DropdownMenuLabel>
                   {presets
                     .filter((p) => !p.isDefault)
                     .map((preset) => (
@@ -239,17 +239,18 @@ export function LevelList({
                             <DropdownMenuItem
                               onClick={() => openUpdatePresetDialog(preset)}
                             >
-                              <Save className="h-4 w-4 mr-2" /> Update Levels
+                              <Save className="h-4 w-4 mr-2" /> Update with
+                              Current Structure
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => openEditPresetDialog(preset)}
                             >
-                              <Edit className="h-4 w-4 mr-2" /> Rename
+                              <Edit className="h-4 w-4 mr-2" /> Rename Preset
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeletePreset(preset)}
                             >
-                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete Preset
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -260,7 +261,8 @@ export function LevelList({
 
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShowSavePresetDialog(true)}>
-                <Save className="h-4 w-4 mr-2" /> Save Current as Preset
+                <Save className="h-4 w-4 mr-2" /> Save Current Structure as New
+                Preset
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

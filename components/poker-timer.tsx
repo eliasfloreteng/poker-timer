@@ -38,7 +38,7 @@ export function PokerTimer() {
 
   const playSound = useCallback(() => {
     if (soundEnabled && settings.soundEnabled) {
-      const audio = new Audio("/notification.mp3")
+      const audio = new Audio("/notification.wav")
       audio.play().catch((e) => console.error("Error playing sound:", e))
     }
   }, [soundEnabled, settings.soundEnabled])
@@ -61,15 +61,18 @@ export function PokerTimer() {
             playSound()
             if (currentLevelIndex < levels.length - 1) {
               setCurrentLevelIndex((prev) => prev + 1)
+              // Don't stop the timer when advancing levels
+              return 0
             } else {
               setIsRunning(false)
+              return 0
             }
-            return 0
           }
           return prev - 1
         })
       }, 1000)
-    } else if (timeRemaining === 0) {
+    } else if (timeRemaining === 0 && currentLevelIndex === levels.length - 1) {
+      // Only stop the timer if we're on the last level and time is up
       setIsRunning(false)
     }
 

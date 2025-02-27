@@ -123,12 +123,12 @@ export function LevelList({
               <DropdownMenuItem
                 onClick={() => handlePresetSelect(fastPacePreset)}
               >
-                Fast Pace (10 min)
+                Fast Pace (5 min/round)
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handlePresetSelect(mediumPacePreset)}
               >
-                Medium Pace (20 min)
+                Medium Pace (10 min/round)
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -188,7 +188,9 @@ export function LevelList({
               </Card>
             ) : (
               <div
-                className={`p-3 border rounded-md ${currentLevelIndex === index ? "bg-muted border-primary" : ""}`}
+                className={`p-3 border rounded-md ${
+                  currentLevelIndex === index ? "bg-muted border-primary" : ""
+                }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-2">

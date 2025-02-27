@@ -254,7 +254,7 @@ export function LevelList({
                         onClick={() => {
                           if (
                             confirm(
-                              "Are you sure you want to remove this level?",
+                              "Are you sure you want to remove this level?"
                             )
                           ) {
                             onRemoveLevel(index)

@@ -23,7 +23,7 @@ export function LevelEditor({ level, onSave, onCancel }: LevelEditorProps) {
       ante: 0,
       duration: 15,
       isBreak: false,
-    },
+    }
   )
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

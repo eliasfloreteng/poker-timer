@@ -29,7 +29,7 @@ export function SettingsPanel({
 
   const handleNumberChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    key: keyof Settings,
+    key: keyof Settings
   ) => {
     const value = Number.parseInt(e.target.value) || 0
     onUpdateSettings({

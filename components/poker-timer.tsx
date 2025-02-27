@@ -22,11 +22,11 @@ import {
 export function PokerTimer() {
   const [levels, setLevels] = useLocalStorage<Level[]>(
     "poker-timer-levels",
-    defaultLevels,
+    defaultLevels
   )
   const [settings, setSettings] = useLocalStorage<Settings>(
     "poker-timer-settings",
-    defaultSettings,
+    defaultSettings
   )
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(0)
@@ -94,7 +94,7 @@ export function PokerTimer() {
       (currentLevelIndex < fromIndex && currentLevelIndex >= toIndex)
     ) {
       setCurrentLevelIndex((prev) =>
-        fromIndex < toIndex ? prev - 1 : prev + 1,
+        fromIndex < toIndex ? prev - 1 : prev + 1
       )
     }
   }
@@ -308,7 +308,7 @@ export function PokerTimer() {
                 onResetLevels={() => {
                   if (
                     confirm(
-                      "Are you sure you want to reset all levels to default?",
+                      "Are you sure you want to reset all levels to default?"
                     )
                   ) {
                     setLevels(defaultLevels)

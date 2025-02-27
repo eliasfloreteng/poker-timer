@@ -314,11 +314,17 @@ export function PokerTimer() {
                 onResetLevels={() => {
                   if (
                     confirm(
-                      "Are you sure you want to reset all levels to default?"
+                      "Are you sure you want to reset all settings to default? This will reload the application."
                     )
                   ) {
+                    // Reset all settings and state
                     setLevels(defaultLevels)
+                    setSettings(defaultSettings)
                     setCurrentLevelIndex(0)
+                    setTimeRemaining(defaultLevels[0].duration * 60)
+                    setIsRunning(false)
+                    // Reload the application
+                    window.location.reload()
                   }
                 }}
               />

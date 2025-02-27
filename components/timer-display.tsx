@@ -1,8 +1,11 @@
+import { useState } from "react"
 import { formatTime } from "@/lib/utils"
 import { calculateChipsForAmount } from "@/lib/chip-utils"
 import type { Level } from "@/types/poker-timer"
 import { Progress } from "@/components/ui/progress"
 import { ChipIcon } from "@/components/ui/chip-icon"
+import { Button } from "@/components/ui/button"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 interface TimerDisplayProps {
   level: Level
@@ -19,6 +22,8 @@ export function TimerDisplay({
   totalLevels,
   chipDenominations,
 }: TimerDisplayProps) {
+  const [showChips, setShowChips] = useState(false)
+
   if (!level) return null
 
   const totalSeconds = level.duration * 60
@@ -36,6 +41,12 @@ export function TimerDisplay({
     level.isBreak || level.ante === 0
       ? []
       : calculateChipsForAmount(level.ante, chipDenominations)
+
+  const hasChips =
+    !level.isBreak &&
+    (smallBlindChips.length > 0 ||
+      bigBlindChips.length > 0 ||
+      anteChips.length > 0)
 
   return (
     <div className="flex flex-col items-center">
@@ -67,53 +78,77 @@ export function TimerDisplay({
             </div>
           )}
 
-          {/* Display chips for small blind */}
-          {smallBlindChips.length > 0 && (
-            <div className="mt-4">
-              <div className="text-sm text-muted-foreground mb-1">
-                Small Blind
+          {hasChips && (
+            <>
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowChips(!showChips)}
+                  className="mt-2 mb-1 flex items-center gap-1 text-sm"
+                >
+                  {showChips ? "Hide chips" : "Show chips"}
+                  {showChips ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
-              <div className="flex flex-wrap justify-center gap-2 mb-3">
-                {smallBlindChips.map((chip, idx) => (
-                  <div key={idx} className="flex items-center gap-1">
-                    <ChipIcon value={chip.denomination} size="sm" />
-                    {chip.count > 1 && <span>x{chip.count}</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* Display chips for big blind */}
-          {bigBlindChips.length > 0 && (
-            <div className="mt-2">
-              <div className="text-sm text-muted-foreground mb-1">
-                Big Blind
-              </div>
-              <div className="flex flex-wrap justify-center gap-2 mb-3">
-                {bigBlindChips.map((chip, idx) => (
-                  <div key={idx} className="flex items-center gap-1">
-                    <ChipIcon value={chip.denomination} size="sm" />
-                    {chip.count > 1 && <span>x{chip.count}</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Display chips for ante */}
-          {anteChips.length > 0 && (
-            <div className="mt-2">
-              <div className="text-sm text-muted-foreground mb-1">Ante</div>
-              <div className="flex flex-wrap justify-center gap-2">
-                {anteChips.map((chip, idx) => (
-                  <div key={idx} className="flex items-center gap-1">
-                    <ChipIcon value={chip.denomination} size="sm" />
-                    {chip.count > 1 && <span>x{chip.count}</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
+              {showChips && (
+                <div className="flex justify-center items-center gap-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                  {/* Display chips for small blind */}
+                  {smallBlindChips.length > 0 && (
+                    <div className="mt-4">
+                      <div className="text-sm text-muted-foreground mb-1">
+                        Small Blind
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-2 mb-3">
+                        {smallBlindChips.map((chip, idx) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            <ChipIcon value={chip.denomination} size="sm" />
+                            {chip.count > 1 && <span>x{chip.count}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Display chips for big blind */}
+                  {bigBlindChips.length > 0 && (
+                    <div className="mt-2">
+                      <div className="text-sm text-muted-foreground mb-1">
+                        Big Blind
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-2 mb-3">
+                        {bigBlindChips.map((chip, idx) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            <ChipIcon value={chip.denomination} size="sm" />
+                            {chip.count > 1 && <span>x{chip.count}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Display chips for ante */}
+                  {anteChips.length > 0 && (
+                    <div className="mt-2">
+                      <div className="text-sm text-muted-foreground mb-1">
+                        Ante
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {anteChips.map((chip, idx) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            <ChipIcon value={chip.denomination} size="sm" />
+                            {chip.count > 1 && <span>x{chip.count}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

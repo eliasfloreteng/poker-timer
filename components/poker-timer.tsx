@@ -18,6 +18,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react"
+import { ChipCalculator } from "@/components/chip-calculator"
 
 export function PokerTimer() {
   const [levels, setLevels] = useLocalStorage<Level[]>(
@@ -152,9 +153,10 @@ export function PokerTimer() {
   return (
     <div className="flex flex-col gap-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="timer">Timer</TabsTrigger>
           <TabsTrigger value="levels">Levels</TabsTrigger>
+          <TabsTrigger value="chips">Chip Counter</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -321,6 +323,10 @@ export function PokerTimer() {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="chips">
+          <ChipCalculator />
         </TabsContent>
       </Tabs>
     </div>

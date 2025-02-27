@@ -22,7 +22,13 @@ export const fastPacePreset = {
     darkMode: false,
     playerCount: 6,
     startingChips: 5000,
-    chipDenominations: [10, 20, 50, 100, 500],
+    chipDenominations: [
+      { value: 10, color: "bg-red-500 border-red-700 text-white" },
+      { value: 20, color: "bg-purple-500 border-purple-700 text-white" },
+      { value: 50, color: "bg-green-600 border-green-800 text-white" },
+      { value: 100, color: "bg-blue-400 border-blue-600 text-white" },
+      { value: 500, color: "bg-black border-gray-800 text-white" },
+    ],
   },
 }
 
@@ -69,7 +75,13 @@ export const mediumPacePreset = {
     darkMode: false,
     playerCount: 8,
     startingChips: 10000,
-    chipDenominations: [10, 20, 50, 100, 500],
+    chipDenominations: [
+      { value: 10, color: "bg-red-500 border-red-700 text-white" },
+      { value: 20, color: "bg-purple-500 border-purple-700 text-white" },
+      { value: 50, color: "bg-green-600 border-green-800 text-white" },
+      { value: 100, color: "bg-blue-400 border-blue-600 text-white" },
+      { value: 500, color: "bg-black border-gray-800 text-white" },
+    ],
   },
 }
 

@@ -6,18 +6,25 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChipIcon } from "@/components/ui/chip-icon"
+import type { ChipDenomination } from "@/types/poker-timer"
 
 interface ChipCount {
-  denomination: number
+  denomination: ChipDenomination
   count: number
 }
 
 interface ChipCalculatorProps {
-  chipDenominations?: number[]
+  chipDenominations?: ChipDenomination[]
 }
 
 export function ChipCalculator({
-  chipDenominations = [10, 20, 50, 100, 500],
+  chipDenominations = [
+    { value: 10, color: "bg-red-500 border-red-700 text-white" },
+    { value: 20, color: "bg-purple-500 border-purple-700 text-white" },
+    { value: 50, color: "bg-green-600 border-green-800 text-white" },
+    { value: 100, color: "bg-blue-400 border-blue-600 text-white" },
+    { value: 500, color: "bg-black border-gray-800 text-white" },
+  ],
 }: ChipCalculatorProps) {
   const defaultChips = chipDenominations.map((denomination) => ({
     denomination,
@@ -37,7 +44,7 @@ export function ChipCalculator({
     // Keep existing counts when possible, set to 0 for new denominations
     const newChips = chipDenominations.map((denomination) => {
       const existingChip = chips.find(
-        (chip) => chip.denomination === denomination
+        (chip) => chip.denomination.value === denomination.value
       )
       return existingChip || { denomination, count: 0 }
     })
@@ -46,7 +53,7 @@ export function ChipCalculator({
 
   // Calculate total value
   const totalValue = chips.reduce(
-    (sum, chip) => sum + chip.denomination * chip.count,
+    (sum, chip) => sum + chip.denomination.value * chip.count,
     0
   )
 
@@ -97,15 +104,19 @@ export function ChipCalculator({
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
             {chips.map((chip, index) => (
-              <div key={chip.denomination} className="space-y-2">
+              <div key={chip.denomination.value} className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <ChipIcon value={chip.denomination} size="sm" />
-                  <Label htmlFor={`chip-${chip.denomination}`}>
-                    {chip.denomination} Chips
+                  <ChipIcon
+                    value={chip.denomination.value}
+                    color={chip.denomination.color}
+                    size="sm"
+                  />
+                  <Label htmlFor={`chip-${chip.denomination.value}`}>
+                    {chip.denomination.value} Chips
                   </Label>
                 </div>
                 <Input
-                  id={`chip-${chip.denomination}`}
+                  id={`chip-${chip.denomination.value}`}
                   type="number"
                   min="0"
                   value={chip.count}

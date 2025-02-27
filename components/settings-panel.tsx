@@ -8,8 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Settings } from "@/types/poker-timer"
-import { Undo2, Volume2, Moon, Plus, X } from "lucide-react"
+import { Undo2, Volume2, Moon, Plus, X, Palette } from "lucide-react"
 import { ChipIcon } from "@/components/ui/chip-icon"
+import { ColorPicker } from "@/components/ui/color-picker"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface SettingsPanelProps {
   settings: Settings
@@ -23,6 +29,7 @@ export function SettingsPanel({
   onResetLevels,
 }: SettingsPanelProps) {
   const [newDenomination, setNewDenomination] = useState<string>("")
+  const [editingChip, setEditingChip] = useState<number | null>(null)
 
   const handleToggle = (key: keyof Settings) => {
     onUpdateSettings({
@@ -44,9 +51,16 @@ export function SettingsPanel({
 
   const addChipDenomination = () => {
     const value = parseInt(newDenomination)
-    if (value && !settings.chipDenominations.includes(value)) {
-      const newDenominations = [...settings.chipDenominations, value].sort(
-        (a, b) => a - b
+    if (
+      value &&
+      !settings.chipDenominations.some((chip) => chip.value === value)
+    ) {
+      // Default color for new chip
+      const defaultColor = "bg-gray-500 border-gray-700 text-white"
+      const newChip = { value, color: defaultColor }
+
+      const newDenominations = [...settings.chipDenominations, newChip].sort(
+        (a, b) => a.value - b.value
       )
       onUpdateSettings({
         ...settings,
@@ -56,14 +70,26 @@ export function SettingsPanel({
     }
   }
 
-  const removeChipDenomination = (denomination: number) => {
+  const removeChipDenomination = (value: number) => {
     const newDenominations = settings.chipDenominations.filter(
-      (d) => d !== denomination
+      (d) => d.value !== value
     )
     onUpdateSettings({
       ...settings,
       chipDenominations: newDenominations,
     })
+  }
+
+  const updateChipColor = (value: number, color: string) => {
+    const updatedDenominations = settings.chipDenominations.map((chip) =>
+      chip.value === value ? { ...chip, color } : chip
+    )
+
+    onUpdateSettings({
+      ...settings,
+      chipDenominations: updatedDenominations,
+    })
+    setEditingChip(null)
   }
 
   return (
@@ -107,18 +133,37 @@ export function SettingsPanel({
           <div className="space-y-2 pt-4 border-t">
             <Label>Chip Denominations</Label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {settings.chipDenominations.map((denomination) => (
+              {settings.chipDenominations.map((chip) => (
                 <div
-                  key={denomination}
+                  key={chip.value}
                   className="flex items-center gap-1 bg-muted rounded-md p-1"
                 >
-                  <ChipIcon value={denomination} size="sm" />
-                  <span>{denomination}</span>
+                  <ChipIcon value={chip.value} color={chip.color} size="sm" />
+                  <span>{chip.value}</span>
+                  <Popover
+                    open={editingChip === chip.value}
+                    onOpenChange={(open) => {
+                      if (open) setEditingChip(chip.value)
+                      else setEditingChip(null)
+                    }}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <Palette className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3">
+                      <ColorPicker
+                        selectedColor={chip.color}
+                        onChange={(color) => updateChipColor(chip.value, color)}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0"
-                    onClick={() => removeChipDenomination(denomination)}
+                    onClick={() => removeChipDenomination(chip.value)}
                   >
                     <X className="h-3 w-3" />
                   </Button>

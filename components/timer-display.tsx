@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { formatTime } from "@/lib/utils"
 import { calculateChipsForAmount } from "@/lib/chip-utils"
-import type { Level } from "@/types/poker-timer"
+import type { Level, ChipDenomination } from "@/types/poker-timer"
 import { Progress } from "@/components/ui/progress"
 import { ChipIcon } from "@/components/ui/chip-icon"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ interface TimerDisplayProps {
   timeRemaining: number
   currentLevelIndex: number
   totalLevels: number
-  chipDenominations: number[]
+  chipDenominations: ChipDenomination[]
 }
 
 export function TimerDisplay({
@@ -107,7 +107,11 @@ export function TimerDisplay({
                       <div className="flex flex-wrap justify-center gap-2 mb-3">
                         {smallBlindChips.map((chip, idx) => (
                           <div key={idx} className="flex items-center gap-1">
-                            <ChipIcon value={chip.denomination} size="sm" />
+                            <ChipIcon
+                              value={chip.denomination.value}
+                              color={chip.denomination.color}
+                              size="sm"
+                            />
                             {chip.count > 1 && <span>x{chip.count}</span>}
                           </div>
                         ))}
@@ -123,7 +127,11 @@ export function TimerDisplay({
                       <div className="flex flex-wrap justify-center gap-2 mb-3">
                         {bigBlindChips.map((chip, idx) => (
                           <div key={idx} className="flex items-center gap-1">
-                            <ChipIcon value={chip.denomination} size="sm" />
+                            <ChipIcon
+                              value={chip.denomination.value}
+                              color={chip.denomination.color}
+                              size="sm"
+                            />
                             {chip.count > 1 && <span>x{chip.count}</span>}
                           </div>
                         ))}
@@ -139,7 +147,11 @@ export function TimerDisplay({
                       <div className="flex flex-wrap justify-center gap-2">
                         {anteChips.map((chip, idx) => (
                           <div key={idx} className="flex items-center gap-1">
-                            <ChipIcon value={chip.denomination} size="sm" />
+                            <ChipIcon
+                              value={chip.denomination.value}
+                              color={chip.denomination.color}
+                              size="sm"
+                            />
                             {chip.count > 1 && <span>x{chip.count}</span>}
                           </div>
                         ))}

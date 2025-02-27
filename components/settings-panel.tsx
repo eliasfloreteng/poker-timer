@@ -15,7 +15,11 @@ interface SettingsPanelProps {
   onResetLevels: () => void
 }
 
-export function SettingsPanel({ settings, onUpdateSettings, onResetLevels }: SettingsPanelProps) {
+export function SettingsPanel({
+  settings,
+  onUpdateSettings,
+  onResetLevels,
+}: SettingsPanelProps) {
   const handleToggle = (key: keyof Settings) => {
     onUpdateSettings({
       ...settings,
@@ -23,7 +27,10 @@ export function SettingsPanel({ settings, onUpdateSettings, onResetLevels }: Set
     })
   }
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>, key: keyof Settings) => {
+  const handleNumberChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    key: keyof Settings,
+  ) => {
     const value = Number.parseInt(e.target.value) || 0
     onUpdateSettings({
       ...settings,
@@ -97,8 +104,12 @@ export function SettingsPanel({ settings, onUpdateSettings, onResetLevels }: Set
           {settings.playerCount > 0 && settings.startingChips > 0 && (
             <div className="p-3 bg-muted rounded-md">
               <div className="text-sm font-medium">Tournament Info</div>
-              <div className="text-sm">Total Chips: {settings.playerCount * settings.startingChips}</div>
-              <div className="text-sm">Average Stack: {settings.startingChips} chips</div>
+              <div className="text-sm">
+                Total Chips: {settings.playerCount * settings.startingChips}
+              </div>
+              <div className="text-sm">
+                Average Stack: {settings.startingChips} chips
+              </div>
             </div>
           )}
         </div>
@@ -113,4 +124,3 @@ export function SettingsPanel({ settings, onUpdateSettings, onResetLevels }: Set
     </div>
   )
 }
-

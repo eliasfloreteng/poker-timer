@@ -12,8 +12,20 @@ export const fastPacePreset = {
     { smallBlind: 200, bigBlind: 400, ante: 50, duration: 10, isBreak: false },
     { smallBlind: 250, bigBlind: 500, ante: 50, duration: 10, isBreak: false },
     { smallBlind: 0, bigBlind: 0, ante: 0, duration: 5, isBreak: true },
-    { smallBlind: 500, bigBlind: 1000, ante: 100, duration: 10, isBreak: false },
-    { smallBlind: 1000, bigBlind: 2000, ante: 200, duration: 10, isBreak: false },
+    {
+      smallBlind: 500,
+      bigBlind: 1000,
+      ante: 100,
+      duration: 10,
+      isBreak: false,
+    },
+    {
+      smallBlind: 1000,
+      bigBlind: 2000,
+      ante: 200,
+      duration: 10,
+      isBreak: false,
+    },
   ],
   settings: {
     soundEnabled: true,
@@ -37,9 +49,27 @@ export const mediumPacePreset = {
     { smallBlind: 200, bigBlind: 400, ante: 50, duration: 20, isBreak: false },
     { smallBlind: 250, bigBlind: 500, ante: 50, duration: 20, isBreak: false },
     { smallBlind: 0, bigBlind: 0, ante: 0, duration: 10, isBreak: true },
-    { smallBlind: 500, bigBlind: 1000, ante: 100, duration: 20, isBreak: false },
-    { smallBlind: 750, bigBlind: 1500, ante: 150, duration: 20, isBreak: false },
-    { smallBlind: 1000, bigBlind: 2000, ante: 200, duration: 20, isBreak: false },
+    {
+      smallBlind: 500,
+      bigBlind: 1000,
+      ante: 100,
+      duration: 20,
+      isBreak: false,
+    },
+    {
+      smallBlind: 750,
+      bigBlind: 1500,
+      ante: 150,
+      duration: 20,
+      isBreak: false,
+    },
+    {
+      smallBlind: 1000,
+      bigBlind: 2000,
+      ante: 200,
+      duration: 20,
+      isBreak: false,
+    },
   ],
   settings: {
     soundEnabled: true,
@@ -51,4 +81,3 @@ export const mediumPacePreset = {
 
 export const defaultLevels = mediumPacePreset.levels
 export const defaultSettings = mediumPacePreset.settings
-

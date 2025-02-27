@@ -3,7 +3,12 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +21,16 @@ import {
 } from "@/components/ui/alert-dialog"
 import type { Level } from "@/types/poker-timer"
 import { LevelEditor } from "@/components/level-editor"
-import { ArrowDown, ArrowUp, Clock, Coffee, Edit, Plus, Trash2, Settings2 } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  Clock,
+  Coffee,
+  Edit,
+  Plus,
+  Trash2,
+  Settings2,
+} from "lucide-react"
 import { fastPacePreset, mediumPacePreset } from "@/lib/default-data"
 
 interface LevelListProps {
@@ -44,7 +58,10 @@ export function LevelList({
 }: LevelListProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [isAddingLevel, setIsAddingLevel] = useState(false)
-  const [selectedPreset, setSelectedPreset] = useState<{ levels: Level[]; settings: any } | null>(null)
+  const [selectedPreset, setSelectedPreset] = useState<{
+    levels: Level[]
+    settings: any
+  } | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   const handleEditLevel = (index: number) => {
@@ -103,8 +120,14 @@ export function LevelList({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handlePresetSelect(fastPacePreset)}>Fast Pace (10 min)</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handlePresetSelect(mediumPacePreset)}>
+              <DropdownMenuItem
+                onClick={() => handlePresetSelect(fastPacePreset)}
+              >
+                Fast Pace (10 min)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handlePresetSelect(mediumPacePreset)}
+              >
                 Medium Pace (20 min)
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -121,12 +144,17 @@ export function LevelList({
           <AlertDialogHeader>
             <AlertDialogTitle>Load Preset Structure</AlertDialogTitle>
             <AlertDialogDescription>
-              This will replace your current tournament structure. Are you sure you want to continue?
+              This will replace your current tournament structure. Are you sure
+              you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedPreset(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={applyPreset}>Continue</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setSelectedPreset(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={applyPreset}>
+              Continue
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -151,11 +179,17 @@ export function LevelList({
                   <CardTitle>Edit Level {index + 1}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <LevelEditor level={level} onSave={handleSaveLevel} onCancel={handleCancelEdit} />
+                  <LevelEditor
+                    level={level}
+                    onSave={handleSaveLevel}
+                    onCancel={handleCancelEdit}
+                  />
                 </CardContent>
               </Card>
             ) : (
-              <div className={`p-3 border rounded-md ${currentLevelIndex === index ? "bg-muted border-primary" : ""}`}>
+              <div
+                className={`p-3 border rounded-md ${currentLevelIndex === index ? "bg-muted border-primary" : ""}`}
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-2">
                     {level.isBreak ? (
@@ -164,7 +198,10 @@ export function LevelList({
                       <span className="font-medium">{index + 1}</span>
                     )}
 
-                    <div className="cursor-pointer" onClick={() => onSelectLevel(index)}>
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => onSelectLevel(index)}
+                    >
                       {level.isBreak ? (
                         <span className="font-medium">Break</span>
                       ) : (
@@ -203,7 +240,11 @@ export function LevelList({
                         <ArrowDown className="h-4 w-4" />
                       </Button>
 
-                      <Button variant="ghost" size="icon" onClick={() => handleEditLevel(index)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditLevel(index)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
 
@@ -211,7 +252,11 @@ export function LevelList({
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          if (confirm("Are you sure you want to remove this level?")) {
+                          if (
+                            confirm(
+                              "Are you sure you want to remove this level?",
+                            )
+                          ) {
                             onRemoveLevel(index)
                           }
                         }}
@@ -230,4 +275,3 @@ export function LevelList({
     </div>
   )
 }
-

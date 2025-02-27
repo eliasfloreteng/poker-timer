@@ -12,4 +12,3 @@ export interface Settings {
   playerCount: number
   startingChips: number
 }
-

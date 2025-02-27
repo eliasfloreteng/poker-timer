@@ -52,7 +52,11 @@ export function LevelEditor({ level, onSave, onCancel }: LevelEditorProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center space-x-2">
-        <Switch id="isBreak" checked={formData.isBreak} onCheckedChange={handleToggleBreak} />
+        <Switch
+          id="isBreak"
+          checked={formData.isBreak}
+          onCheckedChange={handleToggleBreak}
+        />
         <Label htmlFor="isBreak">This is a break</Label>
       </div>
 
@@ -86,14 +90,28 @@ export function LevelEditor({ level, onSave, onCancel }: LevelEditorProps) {
 
           <div className="space-y-2">
             <Label htmlFor="ante">Ante (0 for no ante)</Label>
-            <Input id="ante" name="ante" type="number" value={formData.ante} onChange={handleChange} min={0} />
+            <Input
+              id="ante"
+              name="ante"
+              type="number"
+              value={formData.ante}
+              onChange={handleChange}
+              min={0}
+            />
           </div>
         </>
       )}
 
       <div className="space-y-2">
         <Label htmlFor="duration">Duration (minutes)</Label>
-        <Input id="duration" name="duration" type="number" value={formData.duration} onChange={handleChange} min={1} />
+        <Input
+          id="duration"
+          name="duration"
+          type="number"
+          value={formData.duration}
+          onChange={handleChange}
+          min={1}
+        />
       </div>
 
       <div className="flex justify-end space-x-2">
@@ -105,4 +123,3 @@ export function LevelEditor({ level, onSave, onCancel }: LevelEditorProps) {
     </form>
   )
 }
-

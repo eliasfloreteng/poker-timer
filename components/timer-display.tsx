@@ -9,7 +9,12 @@ interface TimerDisplayProps {
   totalLevels: number
 }
 
-export function TimerDisplay({ level, timeRemaining, currentLevelIndex, totalLevels }: TimerDisplayProps) {
+export function TimerDisplay({
+  level,
+  timeRemaining,
+  currentLevelIndex,
+  totalLevels,
+}: TimerDisplayProps) {
   if (!level) return null
 
   const totalSeconds = level.duration * 60
@@ -22,7 +27,9 @@ export function TimerDisplay({ level, timeRemaining, currentLevelIndex, totalLev
         Level {level.isBreak ? "Break" : currentLevelIndex + 1} of {totalLevels}
       </div>
 
-      <div className={`text-5xl md:text-7xl font-bold mb-2 ${isWarning ? "text-destructive animate-pulse" : ""}`}>
+      <div
+        className={`text-5xl md:text-7xl font-bold mb-2 ${isWarning ? "text-destructive animate-pulse" : ""}`}
+      >
         {formatTime(timeRemaining)}
       </div>
 
@@ -36,10 +43,13 @@ export function TimerDisplay({ level, timeRemaining, currentLevelIndex, totalLev
             {level.smallBlind} / {level.bigBlind}
           </div>
 
-          {level.ante > 0 && <div className="text-lg font-medium text-muted-foreground">Ante: {level.ante}</div>}
+          {level.ante > 0 && (
+            <div className="text-lg font-medium text-muted-foreground">
+              Ante: {level.ante}
+            </div>
+          )}
         </div>
       )}
     </div>
   )
 }
-

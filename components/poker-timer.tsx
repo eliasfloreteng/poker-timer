@@ -10,11 +10,24 @@ import { LevelList } from "@/components/level-list"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Level, Settings } from "@/types/poker-timer"
 import { defaultLevels, defaultSettings } from "@/lib/default-data"
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react"
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react"
 
 export function PokerTimer() {
-  const [levels, setLevels] = useLocalStorage<Level[]>("poker-timer-levels", defaultLevels)
-  const [settings, setSettings] = useLocalStorage<Settings>("poker-timer-settings", defaultSettings)
+  const [levels, setLevels] = useLocalStorage<Level[]>(
+    "poker-timer-levels",
+    defaultLevels,
+  )
+  const [settings, setSettings] = useLocalStorage<Settings>(
+    "poker-timer-settings",
+    defaultSettings,
+  )
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [isRunning, setIsRunning] = useState(false)
@@ -80,7 +93,9 @@ export function PokerTimer() {
       (currentLevelIndex > fromIndex && currentLevelIndex <= toIndex) ||
       (currentLevelIndex < fromIndex && currentLevelIndex >= toIndex)
     ) {
-      setCurrentLevelIndex((prev) => (fromIndex < toIndex ? prev - 1 : prev + 1))
+      setCurrentLevelIndex((prev) =>
+        fromIndex < toIndex ? prev - 1 : prev + 1,
+      )
     }
   }
 
@@ -151,11 +166,20 @@ export function PokerTimer() {
               />
 
               <div className="flex flex-wrap justify-center gap-2 mt-6">
-                <Button variant="outline" size="icon" onClick={goToPreviousLevel} disabled={currentLevelIndex === 0}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={goToPreviousLevel}
+                  disabled={currentLevelIndex === 0}
+                >
                   <SkipBack className="h-4 w-4" />
                 </Button>
 
-                <Button variant={isRunning ? "destructive" : "default"} size="lg" onClick={toggleTimer}>
+                <Button
+                  variant={isRunning ? "destructive" : "default"}
+                  size="lg"
+                  onClick={toggleTimer}
+                >
                   {isRunning ? (
                     <>
                       <Pause className="h-4 w-4 mr-2" /> Pause
@@ -176,8 +200,16 @@ export function PokerTimer() {
                   <SkipForward className="h-4 w-4" />
                 </Button>
 
-                <Button variant="outline" size="icon" onClick={() => setSoundEnabled((prev) => !prev)}>
-                  {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setSoundEnabled((prev) => !prev)}
+                >
+                  {soundEnabled ? (
+                    <Volume2 className="h-4 w-4" />
+                  ) : (
+                    <VolumeX className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
 
@@ -206,22 +238,29 @@ export function PokerTimer() {
           <div className="mt-4">
             <h3 className="text-lg font-medium mb-2">Next Levels</h3>
             <div className="space-y-2">
-              {levels.slice(currentLevelIndex + 1, currentLevelIndex + 4).map((level, idx) => (
-                <div key={idx} className="p-3 border rounded-md flex justify-between items-center">
-                  <div>
-                    {level.isBreak ? (
-                      <span className="font-medium">Break</span>
-                    ) : (
-                      <span>
-                        <span className="font-medium">Level {currentLevelIndex + idx + 2}:</span> {level.smallBlind}/
-                        {level.bigBlind}
-                        {level.ante > 0 && ` (Ante: ${level.ante})`}
-                      </span>
-                    )}
+              {levels
+                .slice(currentLevelIndex + 1, currentLevelIndex + 4)
+                .map((level, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 border rounded-md flex justify-between items-center"
+                  >
+                    <div>
+                      {level.isBreak ? (
+                        <span className="font-medium">Break</span>
+                      ) : (
+                        <span>
+                          <span className="font-medium">
+                            Level {currentLevelIndex + idx + 2}:
+                          </span>{" "}
+                          {level.smallBlind}/{level.bigBlind}
+                          {level.ante > 0 && ` (Ante: ${level.ante})`}
+                        </span>
+                      )}
+                    </div>
+                    <div>{level.duration} min</div>
                   </div>
-                  <div>{level.duration} min</div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </TabsContent>
@@ -267,7 +306,11 @@ export function PokerTimer() {
                 settings={settings}
                 onUpdateSettings={setSettings}
                 onResetLevels={() => {
-                  if (confirm("Are you sure you want to reset all levels to default?")) {
+                  if (
+                    confirm(
+                      "Are you sure you want to reset all levels to default?",
+                    )
+                  ) {
                     setLevels(defaultLevels)
                     setCurrentLevelIndex(0)
                   }
@@ -280,4 +323,3 @@ export function PokerTimer() {
     </div>
   )
 }
-

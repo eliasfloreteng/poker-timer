@@ -156,7 +156,7 @@ export function PokerTimer() {
         <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="timer">Timer</TabsTrigger>
           <TabsTrigger value="levels">Levels</TabsTrigger>
-          <TabsTrigger value="chips">Chip Counter</TabsTrigger>
+          <TabsTrigger value="chips">Counter</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 

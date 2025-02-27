@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChipIcon } from "@/components/ui/chip-icon"
 
 interface ChipCount {
   denomination: number
@@ -82,9 +83,12 @@ export function ChipCalculator() {
           <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
             {chips.map((chip, index) => (
               <div key={chip.denomination} className="space-y-2">
-                <Label htmlFor={`chip-${chip.denomination}`}>
-                  {chip.denomination} Chips
-                </Label>
+                <div className="flex items-center gap-2">
+                  <ChipIcon value={chip.denomination} size="sm" />
+                  <Label htmlFor={`chip-${chip.denomination}`}>
+                    {chip.denomination} Chips
+                  </Label>
+                </div>
                 <Input
                   id={`chip-${chip.denomination}`}
                   type="number"

@@ -83,6 +83,8 @@ export function LevelList({
   const [presetName, setPresetName] = useState("")
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null)
   const [presets, setPresets] = useState<Preset[]>(() => getAllPresets())
+  const [updatingPreset, setUpdatingPreset] = useState<Preset | null>(null)
+  const [showUpdateConfirmDialog, setShowUpdateConfirmDialog] = useState(false)
 
   const refreshPresets = () => {
     setPresets(getAllPresets())
@@ -146,6 +148,16 @@ export function LevelList({
     setPresetName("")
   }
 
+  const handleUpdatePresetLevels = () => {
+    if (!updatingPreset) return
+
+    // Update both name and levels
+    updateCustomPreset(updatingPreset.id, updatingPreset.name, levels)
+    refreshPresets()
+    setUpdatingPreset(null)
+    setShowUpdateConfirmDialog(false)
+  }
+
   const handleDeletePreset = (preset: Preset) => {
     if (preset.isDefault) return // Can't delete default presets
 
@@ -162,6 +174,13 @@ export function LevelList({
 
     setEditingPreset(preset)
     setPresetName(preset.name)
+  }
+
+  const openUpdatePresetDialog = (preset: Preset) => {
+    if (preset.isDefault) return // Can't update default presets
+
+    setUpdatingPreset(preset)
+    setShowUpdateConfirmDialog(true)
   }
 
   return (
@@ -217,6 +236,11 @@ export function LevelList({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => openUpdatePresetDialog(preset)}
+                            >
+                              <Save className="h-4 w-4 mr-2" /> Update Levels
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => openEditPresetDialog(preset)}
                             >
@@ -336,6 +360,30 @@ export function LevelList({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Update Preset Confirmation Dialog */}
+      <AlertDialog
+        open={showUpdateConfirmDialog}
+        onOpenChange={setShowUpdateConfirmDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Update Preset</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will overwrite the levels in "{updatingPreset?.name}" with
+              your current tournament structure. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUpdatingPreset(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleUpdatePresetLevels}>
+              Update
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {isAddingLevel && (
         <Card>

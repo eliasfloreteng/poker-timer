@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Settings } from "@/types/poker-timer"
-import { Undo2, Volume2, Moon, Users, Plus, X } from "lucide-react"
+import { Undo2, Volume2, Moon, Plus, X } from "lucide-react"
 import { ChipIcon } from "@/components/ui/chip-icon"
 
 interface SettingsPanelProps {
@@ -103,43 +103,6 @@ export function SettingsPanel({
               }}
             />
           </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <Label htmlFor="playerCount">Number of Players</Label>
-            </div>
-            <Input
-              id="playerCount"
-              type="number"
-              value={settings.playerCount}
-              onChange={(e) => handleNumberChange(e, "playerCount")}
-              min={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="startingChips">Starting Chips</Label>
-            <Input
-              id="startingChips"
-              type="number"
-              value={settings.startingChips}
-              onChange={(e) => handleNumberChange(e, "startingChips")}
-              min={1}
-            />
-          </div>
-
-          {settings.playerCount > 0 && settings.startingChips > 0 && (
-            <div className="p-3 bg-muted rounded-md">
-              <div className="text-sm font-medium">Tournament Info</div>
-              <div className="text-sm">
-                Total Chips: {settings.playerCount * settings.startingChips}
-              </div>
-              <div className="text-sm">
-                Average Stack: {settings.startingChips} chips
-              </div>
-            </div>
-          )}
 
           <div className="space-y-2 pt-4 border-t">
             <Label>Chip Denominations</Label>

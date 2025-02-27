@@ -5,7 +5,7 @@ export const fastPacePreset = {
     { smallBlind: 100, bigBlind: 200, ante: 0, duration: 5, isBreak: false },
     { smallBlind: 0, bigBlind: 0, ante: 0, duration: 5, isBreak: true },
     { smallBlind: 200, bigBlind: 400, ante: 50, duration: 5, isBreak: false },
-    { smallBlind: 300, bigBlind: 600, ante: 75, duration: 5, isBreak: false },
+    { smallBlind: 300, bigBlind: 600, ante: 70, duration: 5, isBreak: false },
     { smallBlind: 500, bigBlind: 1000, ante: 100, duration: 5, isBreak: false },
     { smallBlind: 0, bigBlind: 0, ante: 0, duration: 5, isBreak: true },
     { smallBlind: 700, bigBlind: 1400, ante: 150, duration: 5, isBreak: false },

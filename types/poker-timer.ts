@@ -18,3 +18,10 @@ export interface Settings {
   startingChips: number
   chipDenominations: ChipDenomination[]
 }
+
+export interface Preset {
+  id: string
+  name: string
+  levels: Level[]
+  isDefault: boolean
+}

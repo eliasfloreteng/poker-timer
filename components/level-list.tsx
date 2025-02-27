@@ -8,6 +8,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
@@ -19,7 +21,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { Level } from "@/types/poker-timer"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import type { Level, Preset } from "@/types/poker-timer"
 import { LevelEditor } from "@/components/level-editor"
 import {
   ArrowDown,
@@ -30,8 +42,15 @@ import {
   Plus,
   Trash2,
   Settings2,
+  Save,
+  MoreVertical,
 } from "lucide-react"
-import { fastPacePreset, mediumPacePreset } from "@/lib/default-data"
+import {
+  getAllPresets,
+  saveCustomPreset,
+  updateCustomPreset,
+  deleteCustomPreset,
+} from "@/lib/preset-manager"
 
 interface LevelListProps {
   levels: Level[]
@@ -58,11 +77,16 @@ export function LevelList({
 }: LevelListProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [isAddingLevel, setIsAddingLevel] = useState(false)
-  const [selectedPreset, setSelectedPreset] = useState<{
-    levels: Level[]
-    settings: any
-  } | null>(null)
+  const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showSavePresetDialog, setShowSavePresetDialog] = useState(false)
+  const [presetName, setPresetName] = useState("")
+  const [editingPreset, setEditingPreset] = useState<Preset | null>(null)
+  const [presets, setPresets] = useState<Preset[]>(() => getAllPresets())
+
+  const refreshPresets = () => {
+    setPresets(getAllPresets())
+  }
 
   const handleEditLevel = (index: number) => {
     setEditingIndex(index)
@@ -89,7 +113,7 @@ export function LevelList({
     setIsAddingLevel(false)
   }
 
-  const handlePresetSelect = (preset: { levels: Level[]; settings: any }) => {
+  const handlePresetSelect = (preset: Preset) => {
     setSelectedPreset(preset)
     setShowConfirmDialog(true)
   }
@@ -97,14 +121,47 @@ export function LevelList({
   const applyPreset = () => {
     if (!selectedPreset) return
 
-    // Update settings first
-    onUpdateSettings(selectedPreset.settings)
-
-    // Update all levels at once
+    // Update levels with the selected preset
     onUpdateLevels(selectedPreset.levels)
 
     setShowConfirmDialog(false)
     setSelectedPreset(null)
+  }
+
+  const handleSavePreset = () => {
+    if (!presetName.trim()) return
+
+    const newPreset = saveCustomPreset(presetName, levels)
+    refreshPresets()
+    setShowSavePresetDialog(false)
+    setPresetName("")
+  }
+
+  const handleUpdatePreset = () => {
+    if (!editingPreset || !presetName.trim()) return
+
+    updateCustomPreset(editingPreset.id, presetName)
+    refreshPresets()
+    setEditingPreset(null)
+    setPresetName("")
+  }
+
+  const handleDeletePreset = (preset: Preset) => {
+    if (preset.isDefault) return // Can't delete default presets
+
+    if (
+      confirm(`Are you sure you want to delete the preset "${preset.name}"?`)
+    ) {
+      deleteCustomPreset(preset.id)
+      refreshPresets()
+    }
+  }
+
+  const openEditPresetDialog = (preset: Preset) => {
+    if (preset.isDefault) return // Can't edit default presets
+
+    setEditingPreset(preset)
+    setPresetName(preset.name)
   }
 
   return (
@@ -116,19 +173,70 @@ export function LevelList({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <Settings2 className="h-4 w-4 mr-2" />
-                Load Preset
+                Presets
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem
-                onClick={() => handlePresetSelect(fastPacePreset)}
-              >
-                Fast Pace (5 min/round)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handlePresetSelect(mediumPacePreset)}
-              >
-                Medium Pace (10 min/round)
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Default Presets</DropdownMenuLabel>
+              {presets
+                .filter((p) => p.isDefault)
+                .map((preset) => (
+                  <DropdownMenuItem
+                    key={preset.id}
+                    onClick={() => handlePresetSelect(preset)}
+                  >
+                    {preset.name}
+                  </DropdownMenuItem>
+                ))}
+
+              {presets.some((p) => !p.isDefault) && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Custom Presets</DropdownMenuLabel>
+                  {presets
+                    .filter((p) => !p.isDefault)
+                    .map((preset) => (
+                      <div
+                        key={preset.id}
+                        className="flex items-center justify-between px-2"
+                      >
+                        <DropdownMenuItem
+                          onClick={() => handlePresetSelect(preset)}
+                          className="flex-1"
+                        >
+                          {preset.name}
+                        </DropdownMenuItem>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                            >
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => openEditPresetDialog(preset)}
+                            >
+                              <Edit className="h-4 w-4 mr-2" /> Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeletePreset(preset)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    ))}
+                </>
+              )}
+
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowSavePresetDialog(true)}>
+                <Save className="h-4 w-4 mr-2" /> Save Current as Preset
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -139,6 +247,7 @@ export function LevelList({
         </div>
       </div>
 
+      {/* Load Preset Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -158,6 +267,75 @@ export function LevelList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Save Preset Dialog */}
+      <Dialog
+        open={showSavePresetDialog}
+        onOpenChange={setShowSavePresetDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save as Preset</DialogTitle>
+            <DialogDescription>
+              Save your current tournament structure as a custom preset.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="preset-name">Preset Name</Label>
+            <Input
+              id="preset-name"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              placeholder="Enter preset name..."
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSavePresetDialog(false)
+                setPresetName("")
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSavePreset}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Preset Dialog */}
+      <Dialog
+        open={!!editingPreset}
+        onOpenChange={(open) => !open && setEditingPreset(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Preset</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="edit-preset-name">Preset Name</Label>
+            <Input
+              id="edit-preset-name"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              placeholder="Enter preset name..."
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingPreset(null)
+                setPresetName("")
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpdatePreset}>Update</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {isAddingLevel && (
         <Card>

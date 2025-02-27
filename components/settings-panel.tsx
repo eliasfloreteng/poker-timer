@@ -1,13 +1,15 @@
 "use client"
 
 import type React from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Settings } from "@/types/poker-timer"
-import { Undo2, Volume2, Moon, Users } from "lucide-react"
+import { Undo2, Volume2, Moon, Users, Plus, X } from "lucide-react"
+import { ChipIcon } from "@/components/ui/chip-icon"
 
 interface SettingsPanelProps {
   settings: Settings
@@ -20,6 +22,8 @@ export function SettingsPanel({
   onUpdateSettings,
   onResetLevels,
 }: SettingsPanelProps) {
+  const [newDenomination, setNewDenomination] = useState<string>("")
+
   const handleToggle = (key: keyof Settings) => {
     onUpdateSettings({
       ...settings,
@@ -35,6 +39,30 @@ export function SettingsPanel({
     onUpdateSettings({
       ...settings,
       [key]: value,
+    })
+  }
+
+  const addChipDenomination = () => {
+    const value = parseInt(newDenomination)
+    if (value && !settings.chipDenominations.includes(value)) {
+      const newDenominations = [...settings.chipDenominations, value].sort(
+        (a, b) => a - b
+      )
+      onUpdateSettings({
+        ...settings,
+        chipDenominations: newDenominations,
+      })
+      setNewDenomination("")
+    }
+  }
+
+  const removeChipDenomination = (denomination: number) => {
+    const newDenominations = settings.chipDenominations.filter(
+      (d) => d !== denomination
+    )
+    onUpdateSettings({
+      ...settings,
+      chipDenominations: newDenominations,
     })
   }
 
@@ -112,6 +140,41 @@ export function SettingsPanel({
               </div>
             </div>
           )}
+
+          <div className="space-y-2 pt-4 border-t">
+            <Label>Chip Denominations</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {settings.chipDenominations.map((denomination) => (
+                <div
+                  key={denomination}
+                  className="flex items-center gap-1 bg-muted rounded-md p-1"
+                >
+                  <ChipIcon value={denomination} size="sm" />
+                  <span>{denomination}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => removeChipDenomination(denomination)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={newDenomination}
+                onChange={(e) => setNewDenomination(e.target.value)}
+                placeholder="Add denomination"
+                type="number"
+                min="1"
+              />
+              <Button onClick={addChipDenomination} size="sm">
+                <Plus className="h-4 w-4 mr-1" /> Add
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 

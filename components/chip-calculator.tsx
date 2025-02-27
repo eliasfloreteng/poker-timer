@@ -12,14 +12,17 @@ interface ChipCount {
   count: number
 }
 
-export function ChipCalculator() {
-  const defaultChips = [
-    { denomination: 10, count: 0 },
-    { denomination: 20, count: 0 },
-    { denomination: 50, count: 0 },
-    { denomination: 100, count: 0 },
-    { denomination: 500, count: 0 },
-  ]
+interface ChipCalculatorProps {
+  chipDenominations?: number[]
+}
+
+export function ChipCalculator({
+  chipDenominations = [10, 20, 50, 100, 500],
+}: ChipCalculatorProps) {
+  const defaultChips = chipDenominations.map((denomination) => ({
+    denomination,
+    count: 0,
+  }))
 
   const [chips, setChips] = useState<ChipCount[]>(defaultChips)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -28,6 +31,18 @@ export function ChipCalculator() {
   useEffect(() => {
     inputRefs.current = inputRefs.current.slice(0, chips.length)
   }, [chips.length])
+
+  // Update chips when denominations change
+  useEffect(() => {
+    // Keep existing counts when possible, set to 0 for new denominations
+    const newChips = chipDenominations.map((denomination) => {
+      const existingChip = chips.find(
+        (chip) => chip.denomination === denomination
+      )
+      return existingChip || { denomination, count: 0 }
+    })
+    setChips(newChips)
+  }, [chipDenominations])
 
   // Calculate total value
   const totalValue = chips.reduce(

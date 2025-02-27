@@ -11,4 +11,5 @@ export interface Settings {
   darkMode: boolean
   playerCount: number
   startingChips: number
+  chipDenominations: number[]
 }

@@ -168,6 +168,7 @@ export function PokerTimer() {
                 timeRemaining={timeRemaining}
                 currentLevelIndex={currentLevelIndex}
                 totalLevels={levels.length}
+                chipDenominations={settings.chipDenominations}
               />
 
               <div className="flex flex-wrap justify-center gap-2 mt-6">
@@ -326,7 +327,7 @@ export function PokerTimer() {
         </TabsContent>
 
         <TabsContent value="chips">
-          <ChipCalculator />
+          <ChipCalculator chipDenominations={settings.chipDenominations} />
         </TabsContent>
       </Tabs>
     </div>

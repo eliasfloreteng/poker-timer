@@ -22,6 +22,7 @@ export const fastPacePreset = {
     darkMode: false,
     playerCount: 6,
     startingChips: 5000,
+    chipDenominations: [10, 20, 50, 100, 500],
   },
 }
 
@@ -68,6 +69,7 @@ export const mediumPacePreset = {
     darkMode: false,
     playerCount: 8,
     startingChips: 10000,
+    chipDenominations: [10, 20, 50, 100, 500],
   },
 }
 

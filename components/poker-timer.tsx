@@ -151,14 +151,6 @@ export function PokerTimer() {
     }
   }
 
-  const skipBreak = () => {
-    if (currentLevel?.isBreak && currentLevelIndex < levels.length - 1) {
-      setCurrentLevelIndex((prev) => prev + 1)
-      // Reset timer to the new level's duration
-      setTimeRemaining(levels[currentLevelIndex + 1].duration * 60)
-    }
-  }
-
   const shortenLevel = () => {
     if (timeRemaining > 60) {
       setTimeRemaining((prev) => prev - 60)
@@ -246,14 +238,6 @@ export function PokerTimer() {
                   )}
                 </Button>
               </div>
-
-              {currentLevel?.isBreak && (
-                <div className="mt-4 flex justify-center">
-                  <Button variant="secondary" onClick={skipBreak}>
-                    Skip Break
-                  </Button>
-                </div>
-              )}
 
               <div className="mt-4 flex justify-center gap-2">
                 <Button variant="outline" size="sm" onClick={shortenLevel}>

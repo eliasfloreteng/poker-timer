@@ -29,11 +29,23 @@ export function PokerTimer() {
     "poker-timer-settings",
     defaultSettings
   )
-  const [currentLevelIndex, setCurrentLevelIndex] = useState(0)
-  const [timeRemaining, setTimeRemaining] = useState(0)
-  const [isRunning, setIsRunning] = useState(false)
+  const [currentLevelIndex, setCurrentLevelIndex] = useLocalStorage<number>(
+    "poker-timer-currentLevelIndex",
+    0
+  )
+  const [timeRemaining, setTimeRemaining] = useLocalStorage<number>(
+    "poker-timer-timeRemaining",
+    levels[0]?.duration * 60 || 0
+  )
+  const [isRunning, setIsRunning] = useLocalStorage<boolean>(
+    "poker-timer-isRunning",
+    false
+  )
   const [activeTab, setActiveTab] = useState("timer")
-  const [soundEnabled, setSoundEnabled] = useState(true)
+  const [soundEnabled, setSoundEnabled] = useLocalStorage<boolean>(
+    "poker-timer-soundEnabled",
+    true
+  )
 
   const currentLevel = levels[currentLevelIndex]
 
@@ -44,12 +56,12 @@ export function PokerTimer() {
     }
   }, [soundEnabled, settings.soundEnabled])
 
-  // Initialize timer when level changes
+  // Initialize timer when level changes, but only if it's not already set
   useEffect(() => {
-    if (currentLevel) {
+    if (currentLevel && timeRemaining === 0) {
       setTimeRemaining(currentLevel.duration * 60)
     }
-  }, [currentLevel])
+  }, [currentLevel, timeRemaining, setTimeRemaining])
 
   // Timer logic
   useEffect(() => {
@@ -80,7 +92,16 @@ export function PokerTimer() {
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [isRunning, timeRemaining, currentLevelIndex, levels.length, playSound])
+  }, [
+    isRunning,
+    timeRemaining,
+    currentLevelIndex,
+    levels.length,
+    playSound,
+    setTimeRemaining,
+    setCurrentLevelIndex,
+    setIsRunning,
+  ])
 
   const moveLevel = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0 || toIndex >= levels.length) return
@@ -117,18 +138,24 @@ export function PokerTimer() {
   const goToNextLevel = () => {
     if (currentLevelIndex < levels.length - 1) {
       setCurrentLevelIndex((prev) => prev + 1)
+      // Reset timer to the new level's duration
+      setTimeRemaining(levels[currentLevelIndex + 1].duration * 60)
     }
   }
 
   const goToPreviousLevel = () => {
     if (currentLevelIndex > 0) {
       setCurrentLevelIndex((prev) => prev - 1)
+      // Reset timer to the new level's duration
+      setTimeRemaining(levels[currentLevelIndex - 1].duration * 60)
     }
   }
 
   const skipBreak = () => {
     if (currentLevel?.isBreak && currentLevelIndex < levels.length - 1) {
       setCurrentLevelIndex((prev) => prev + 1)
+      // Reset timer to the new level's duration
+      setTimeRemaining(levels[currentLevelIndex + 1].duration * 60)
     }
   }
 
@@ -147,6 +174,7 @@ export function PokerTimer() {
   const updateLevels = (newLevels: Level[]) => {
     setLevels(newLevels)
     setCurrentLevelIndex(0)
+    setTimeRemaining(newLevels[0]?.duration * 60 || 0)
     setIsRunning(false)
   }
 

@@ -55,7 +55,6 @@ import {
 interface LevelListProps {
   levels: Level[]
   currentLevelIndex: number
-  onUpdateSettings: (settings: any) => void
   onUpdateLevel: (level: Level, index: number) => void
   onAddLevel: (level: Level) => void
   onRemoveLevel: (index: number) => void
@@ -67,7 +66,6 @@ interface LevelListProps {
 export function LevelList({
   levels,
   currentLevelIndex,
-  onUpdateSettings,
   onUpdateLevel,
   onAddLevel,
   onRemoveLevel,

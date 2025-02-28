@@ -277,7 +277,6 @@ export function PokerTimer() {
               <LevelList
                 levels={levels}
                 currentLevelIndex={currentLevelIndex}
-                onUpdateSettings={setSettings}
                 onUpdateLevel={(level, index) => {
                   const newLevels = [...levels]
                   newLevels[index] = level

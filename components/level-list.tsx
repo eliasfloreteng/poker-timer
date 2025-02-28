@@ -482,13 +482,7 @@ export function LevelList({
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          if (
-                            confirm(
-                              "Are you sure you want to remove this level?"
-                            )
-                          ) {
-                            onRemoveLevel(index)
-                          }
+                          onRemoveLevel(index)
                         }}
                         disabled={levels.length <= 1}
                       >

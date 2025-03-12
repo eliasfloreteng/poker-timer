@@ -23,8 +23,6 @@ export interface Player {
 export interface Settings {
   soundEnabled: boolean
   darkMode: boolean
-  playerCount: number
-  startingChips: number
   chipDenominations: ChipDenomination[]
   players: Player[]
 }

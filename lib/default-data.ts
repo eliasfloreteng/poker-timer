@@ -51,8 +51,6 @@ export const defaultPresets: Preset[] = [
 export const defaultSettings: Settings = {
   soundEnabled: true,
   darkMode: false,
-  playerCount: 8,
-  startingChips: 10000,
   chipDenominations: [
     { value: 10, color: "bg-red-500 border-red-700 text-white" },
     { value: 20, color: "bg-purple-500 border-purple-700 text-white" },

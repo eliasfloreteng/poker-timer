@@ -242,14 +242,6 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
     })
   }
 
-  const handleStartingChipsChange = (value: string) => {
-    const chips = parseInt(value) || 0
-    onUpdateSettings({
-      ...settings,
-      startingChips: chips,
-    })
-  }
-
   const randomizeDealer = () => {
     const activePlayers = settings.players.filter((p) => p.active)
     if (activePlayers.length === 0) return
@@ -412,24 +404,6 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold mb-4">Tournament Seating Plan</h2>
-
-        {/* Starting Chips Setting */}
-        <div className="mb-6 p-4 border rounded-md bg-muted/30">
-          <div className="space-y-2 mb-4">
-            <Label htmlFor="startingChips">Starting Chips</Label>
-            <Input
-              id="startingChips"
-              type="number"
-              min="100"
-              step="100"
-              value={settings.startingChips}
-              onChange={(e) => handleStartingChipsChange(e.target.value)}
-            />
-            <p className="text-sm text-muted-foreground">
-              Number of chips each player starts with
-            </p>
-          </div>
-        </div>
 
         {/* Player management buttons */}
         <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -640,14 +614,6 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
                           <Label className="text-muted-foreground">Role</Label>
                           <div className="font-medium">
                             {getRoleDisplayName(role) || "None"}
-                          </div>
-                        </div>
-                        <div className="col-span-2">
-                          <Label className="text-muted-foreground">
-                            Starting Chips
-                          </Label>
-                          <div className="font-medium">
-                            {settings.startingChips.toLocaleString()}
                           </div>
                         </div>
                       </div>

@@ -23,6 +23,11 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
   Plus,
   Minus,
   Edit,
@@ -32,9 +37,12 @@ import {
   Coins,
   Award,
   Repeat,
+  Info,
+  User,
 } from "lucide-react"
 import { Player, Settings } from "@/types/poker-timer"
 import { nanoid } from "nanoid"
+import { cn } from "@/lib/utils"
 
 interface SeatingPlanProps {
   settings: Settings
@@ -48,6 +56,7 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
   const [dealerSeat, setDealerSeat] = useState<number | null>(null)
   const [smallBlindSeat, setSmallBlindSeat] = useState<number | null>(null)
   const [bigBlindSeat, setBigBlindSeat] = useState<number | null>(null)
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
 
   // Calculate the current number of seats based on player count
   const seatCount = Math.max(settings.players.length, 2)
@@ -259,6 +268,54 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
     (a, b) => a.seatNumber - b.seatNumber
   )
 
+  // Get player role
+  const getPlayerRole = (player: Player) => {
+    if (dealerSeat === player.seatNumber) return "dealer"
+    if (smallBlindSeat === player.seatNumber) return "smallBlind"
+    if (bigBlindSeat === player.seatNumber) return "bigBlind"
+    return null
+  }
+
+  // Get role display name
+  const getRoleDisplayName = (role: string | null) => {
+    if (role === "dealer") return "Dealer"
+    if (role === "smallBlind") return "Small Blind"
+    if (role === "bigBlind") return "Big Blind"
+    return null
+  }
+
+  // Calculate player position in circle
+  const calculatePosition = (index: number, total: number) => {
+    // Only use active players for calculation
+    const activeTotal = activePlayers.length
+    if (activeTotal === 0) return { top: "50%", left: "50%" }
+
+    // Adjust index to only consider active players
+    if (!activePlayers.includes(sortedPlayers[index])) {
+      return { top: "50%", left: "50%" }
+    }
+
+    const activeIndex = activePlayers.findIndex(
+      (p) => p.id === sortedPlayers[index].id
+    )
+
+    // Calculate position on a circle
+    // Start from top (12 o'clock) and go clockwise
+    const angleStep = (2 * Math.PI) / activeTotal
+    const angle = angleStep * activeIndex - Math.PI / 2 // Start from top
+
+    // Table radius - adjust as needed
+    const radius = activeTotal <= 4 ? 35 : activeTotal <= 6 ? 40 : 45
+
+    const x = 50 + radius * Math.cos(angle)
+    const y = 50 + radius * Math.sin(angle)
+
+    return {
+      left: `${x}%`,
+      top: `${y}%`,
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -368,6 +425,194 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
           </div>
         )}
 
+        {/* Circular poker table visualization */}
+        {settings.players.length > 0 && (
+          <div className="mb-6">
+            <div className="relative w-full aspect-square max-w-[600px] mx-auto">
+              {/* Table background */}
+              <div className="absolute inset-[15%] rounded-full bg-green-700 dark:bg-green-800 border-8 border-brown-800 dark:border-stone-900 shadow-lg flex items-center justify-center">
+                <div className="text-white text-center">
+                  <span className="text-lg font-medium">Poker Table</span>
+                  {dealerSeat && (
+                    <div className="text-sm mt-1">
+                      Dealer: Seat {dealerSeat}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Players around the table */}
+              {sortedPlayers.map((player, index) => {
+                if (!player.active) return null
+
+                const position = calculatePosition(index, sortedPlayers.length)
+                const role = getPlayerRole(player)
+
+                // Role badge colors
+                const roleColors = {
+                  dealer: "bg-yellow-500",
+                  smallBlind: "bg-blue-500",
+                  bigBlind: "bg-purple-500",
+                }
+
+                return (
+                  <Dialog key={player.id}>
+                    <DialogTrigger asChild>
+                      <button
+                        className="absolute w-16 h-16 rounded-full bg-white dark:bg-gray-800 shadow-md border-2 border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform cursor-pointer"
+                        style={{ top: position.top, left: position.left }}
+                      >
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700">
+                          <User className="w-6 h-6 text-gray-500 dark:text-gray-300" />
+                        </div>
+                        <div className="text-xs mt-1 font-medium truncate max-w-[95%] text-gray-800 dark:text-gray-200">
+                          {player.name}
+                        </div>
+                        <div className="absolute -top-1 -right-1 flex gap-0.5">
+                          {role && (
+                            <span
+                              className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] text-white ${
+                                roleColors[role as keyof typeof roleColors]
+                              }`}
+                              title={getRoleDisplayName(role) || ""}
+                            >
+                              {role === "dealer"
+                                ? "D"
+                                : role === "smallBlind"
+                                ? "S"
+                                : "B"}
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute -bottom-1 -left-1 bg-gray-800 dark:bg-gray-900 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
+                          {player.seatNumber}
+                        </div>
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          Player Details: {player.name}
+                          {role && (
+                            <span
+                              className={`ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs text-white ${
+                                roleColors[role as keyof typeof roleColors]
+                              }`}
+                            >
+                              {role === "dealer"
+                                ? "D"
+                                : role === "smallBlind"
+                                ? "SB"
+                                : "BB"}
+                            </span>
+                          )}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="grid grid-cols-2 gap-4 py-4">
+                        <div>
+                          <Label className="text-muted-foreground">Seat</Label>
+                          <div className="font-medium">{player.seatNumber}</div>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">
+                            Buy-ins
+                          </Label>
+                          <div className="font-medium">{player.buyIns}</div>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">
+                            Status
+                          </Label>
+                          <div
+                            className={`font-medium ${
+                              player.active
+                                ? "text-green-600 dark:text-green-500"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {player.active ? "Active" : "Inactive"}
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Role</Label>
+                          <div className="font-medium">
+                            {getRoleDisplayName(role) || "None"}
+                          </div>
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-muted-foreground">
+                            Starting Chips
+                          </Label>
+                          <div className="font-medium">
+                            {settings.startingChips.toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                            >
+                              <Edit className="h-4 w-4 mr-2" /> Edit Player
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Player</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="editName">Player Name</Label>
+                                <Input
+                                  id="editName"
+                                  value={player.name}
+                                  onChange={(e) => {
+                                    const updatedPlayer = {
+                                      ...player,
+                                      name: e.target.value,
+                                    }
+                                    updatePlayer(updatedPlayer)
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <DialogClose asChild>
+                                <Button variant="outline">Cancel</Button>
+                              </DialogClose>
+                              <DialogClose asChild>
+                                <Button
+                                  onClick={() => {
+                                    // No need for additional action, changes are applied directly
+                                  }}
+                                >
+                                  Save Changes
+                                </Button>
+                              </DialogClose>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                        <Button
+                          variant={player.active ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => togglePlayerActive(player.id)}
+                          className="flex-1"
+                        >
+                          {player.active ? "Set Inactive" : "Set Active"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Player list table */}
         {settings.players.length > 0 ? (
           <Card>
             <CardContent className="p-0">

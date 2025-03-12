@@ -39,6 +39,9 @@ import {
   Repeat,
   Info,
   User,
+  Smile,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react"
 import { Player, Settings } from "@/types/poker-timer"
 import { nanoid } from "nanoid"
@@ -57,6 +60,39 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
   const [smallBlindSeat, setSmallBlindSeat] = useState<number | null>(null)
   const [bigBlindSeat, setBigBlindSeat] = useState<number | null>(null)
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+
+  // Common emojis for easy selection
+  const commonEmojis = [
+    "😀",
+    "😎",
+    "🤓",
+    "😍",
+    "🤑",
+    "😏",
+    "🧐",
+    "🤠",
+    "👑",
+    "🐱",
+    "🐶",
+    "🦊",
+    "🦁",
+    "🐯",
+    "🐻",
+    "🐼",
+    "🐨",
+    "🦄",
+    "🍀",
+    "⭐",
+    "🔥",
+    "💰",
+    "💎",
+    "🃏",
+    "♠️",
+    "♥️",
+    "♦️",
+    "♣️",
+  ]
 
   // Calculate the current number of seats based on player count
   const seatCount = Math.max(settings.players.length, 2)
@@ -70,6 +106,7 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
         seatNumber: settings.players.length + 1, // Incremental seat number
         buyIns: 1,
         active: true,
+        emoji: undefined, // Default to no emoji
       }
 
       onUpdateSettings({
@@ -316,6 +353,61 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
     }
   }
 
+  // Function to manually set dealer position
+  const setDealerPosition = (seatNumber: number) => {
+    setDealerSeat(seatNumber)
+    setAutoBlinds(seatNumber)
+  }
+
+  // Function to manually change a player's seat number
+  const changePlayerSeat = (playerId: string, newSeatNumber: number) => {
+    // Get the player we're moving
+    const currentPlayer = settings.players.find((p) => p.id === playerId)
+    if (!currentPlayer) return
+
+    // Find the player who is currently in the target seat
+    const targetPlayer = settings.players.find(
+      (p) => p.seatNumber === newSeatNumber && p.id !== playerId
+    )
+
+    // Update player positions
+    const updatedPlayers = settings.players.map((player) => {
+      if (player.id === playerId) {
+        // Move current player to new seat
+        return { ...player, seatNumber: newSeatNumber }
+      } else if (player.id === targetPlayer?.id) {
+        // Swap the other player to current player's seat
+        return { ...player, seatNumber: currentPlayer.seatNumber }
+      }
+      return player
+    })
+
+    // Update settings with new player positions
+    onUpdateSettings({
+      ...settings,
+      players: updatedPlayers,
+    })
+
+    // Update dealer, small blind and big blind positions if needed
+    if (dealerSeat === newSeatNumber) {
+      setDealerSeat(currentPlayer.seatNumber)
+    } else if (dealerSeat === currentPlayer.seatNumber) {
+      setDealerSeat(newSeatNumber)
+    }
+
+    if (smallBlindSeat === newSeatNumber) {
+      setSmallBlindSeat(currentPlayer.seatNumber)
+    } else if (smallBlindSeat === currentPlayer.seatNumber) {
+      setSmallBlindSeat(newSeatNumber)
+    }
+
+    if (bigBlindSeat === newSeatNumber) {
+      setBigBlindSeat(currentPlayer.seatNumber)
+    } else if (bigBlindSeat === currentPlayer.seatNumber) {
+      setBigBlindSeat(newSeatNumber)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -433,9 +525,15 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
               <div className="absolute inset-[15%] rounded-full bg-green-700 dark:bg-green-800 border-8 border-brown-800 dark:border-stone-900 shadow-lg flex items-center justify-center">
                 <div className="text-white text-center">
                   <span className="text-lg font-medium">Poker Table</span>
-                  {dealerSeat && (
+                  {dealerSeat && getPlayerInSeat(dealerSeat) && (
                     <div className="text-sm mt-1">
-                      Dealer: Seat {dealerSeat}
+                      Dealer: Seat {dealerSeat} -{" "}
+                      {getPlayerInSeat(dealerSeat)?.name}
+                      {getPlayerInSeat(dealerSeat)?.emoji && (
+                        <span className="ml-1">
+                          {getPlayerInSeat(dealerSeat)?.emoji}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -463,7 +561,11 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
                         style={{ top: position.top, left: position.left }}
                       >
                         <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700">
-                          <User className="w-6 h-6 text-gray-500 dark:text-gray-300" />
+                          {player.emoji ? (
+                            <span className="text-xl">{player.emoji}</span>
+                          ) : (
+                            <User className="w-6 h-6 text-gray-500 dark:text-gray-300" />
+                          )}
                         </div>
                         <div className="text-xs mt-1 font-medium truncate max-w-[95%] text-gray-800 dark:text-gray-200">
                           {player.name}
@@ -492,7 +594,8 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                          Player Details: {player.name}
+                          Player Details: {player.name}{" "}
+                          {player.emoji && <span>{player.emoji}</span>}
                           {role && (
                             <span
                               className={`ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs text-white ${
@@ -553,41 +656,127 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
                           <DialogTrigger asChild>
                             <Button
                               variant="outline"
-                              size="sm"
-                              className="flex-1"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => setEditingPlayer(player)}
                             >
-                              <Edit className="h-4 w-4 mr-2" /> Edit Player
+                              <Edit className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
                               <DialogTitle>Edit Player</DialogTitle>
                             </DialogHeader>
-                            <div className="space-y-4 py-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="editName">Player Name</Label>
-                                <Input
-                                  id="editName"
-                                  value={player.name}
-                                  onChange={(e) => {
-                                    const updatedPlayer = {
-                                      ...player,
-                                      name: e.target.value,
+                            {editingPlayer && (
+                              <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="playerName">
+                                    Player Name
+                                  </Label>
+                                  <Input
+                                    id="playerName"
+                                    value={editingPlayer.name}
+                                    onChange={(e) =>
+                                      setEditingPlayer({
+                                        ...editingPlayer,
+                                        name: e.target.value,
+                                      })
                                     }
-                                    updatePlayer(updatedPlayer)
-                                  }}
-                                />
+                                  />
+                                </div>
+
+                                {/* Emoji Selection */}
+                                <div className="space-y-2">
+                                  <Label>Player Emoji</Label>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-10 h-10 flex items-center justify-center border rounded-md">
+                                      {editingPlayer.emoji
+                                        ? editingPlayer.emoji
+                                        : "🙂"}
+                                    </div>
+                                    <Popover
+                                      open={showEmojiPicker}
+                                      onOpenChange={setShowEmojiPicker}
+                                    >
+                                      <PopoverTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                          <Smile className="h-4 w-4 mr-2" />{" "}
+                                          Select Emoji
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-64">
+                                        <div className="grid grid-cols-5 gap-2">
+                                          {commonEmojis.map((emoji) => (
+                                            <Button
+                                              key={emoji}
+                                              variant="ghost"
+                                              className="h-10 w-10 p-0"
+                                              onClick={() => {
+                                                const updatedPlayer = {
+                                                  ...editingPlayer,
+                                                  emoji: emoji,
+                                                }
+                                                updatePlayer(updatedPlayer)
+                                                setShowEmojiPicker(false)
+                                              }}
+                                            >
+                                              <span className="text-xl">
+                                                {emoji}
+                                              </span>
+                                            </Button>
+                                          ))}
+                                          <Button
+                                            variant="ghost"
+                                            className="h-10 w-10 p-0"
+                                            onClick={() => {
+                                              const updatedPlayer = {
+                                                ...editingPlayer,
+                                                emoji: undefined,
+                                              }
+                                              updatePlayer(updatedPlayer)
+                                              setShowEmojiPicker(false)
+                                            }}
+                                          >
+                                            <span className="text-xl">❌</span>
+                                          </Button>
+                                        </div>
+                                      </PopoverContent>
+                                    </Popover>
+                                  </div>
+                                </div>
+
+                                {/* Dealer Position Assignment */}
+                                <div className="space-y-2">
+                                  <Label>Dealer Position</Label>
+                                  <Button
+                                    variant={
+                                      dealerSeat === editingPlayer.seatNumber
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    onClick={() =>
+                                      setDealerPosition(
+                                        editingPlayer.seatNumber
+                                      )
+                                    }
+                                    className="w-full"
+                                  >
+                                    {dealerSeat === editingPlayer.seatNumber
+                                      ? "Current Dealer"
+                                      : "Set as Dealer"}
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
+                            )}
                             <DialogFooter>
                               <DialogClose asChild>
                                 <Button variant="outline">Cancel</Button>
                               </DialogClose>
                               <DialogClose asChild>
                                 <Button
-                                  onClick={() => {
-                                    // No need for additional action, changes are applied directly
-                                  }}
+                                  onClick={() =>
+                                    editingPlayer && updatePlayer(editingPlayer)
+                                  }
                                 >
                                   Save Changes
                                 </Button>
@@ -595,6 +784,8 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
+
+                        {/* Existing buttons */}
                         <Button
                           variant={player.active ? "default" : "outline"}
                           size="sm"
@@ -634,9 +825,52 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
                       className={!player.active ? "opacity-60" : ""}
                     >
                       <TableCell className="font-medium">
-                        {player.seatNumber}
+                        <div className="flex items-center gap-2">
+                          <div>{player.seatNumber}</div>
+                          <div className="flex flex-col">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 p-0"
+                              onClick={() => {
+                                const prevSeatNumber = player.seatNumber - 1
+                                if (prevSeatNumber >= 1) {
+                                  changePlayerSeat(player.id, prevSeatNumber)
+                                }
+                              }}
+                              disabled={player.seatNumber <= 1}
+                              title="Move to previous seat"
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 p-0"
+                              onClick={() => {
+                                const nextSeatNumber = player.seatNumber + 1
+                                if (nextSeatNumber <= settings.players.length) {
+                                  changePlayerSeat(player.id, nextSeatNumber)
+                                }
+                              }}
+                              disabled={
+                                player.seatNumber >= settings.players.length
+                              }
+                              title="Move to next seat"
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
                       </TableCell>
-                      <TableCell>{player.name}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {player.emoji && (
+                            <span className="text-xl">{player.emoji}</span>
+                          )}
+                          {player.name}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-center">
                         {player.active && (
                           <div className="flex items-center justify-center gap-1">
@@ -732,7 +966,88 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
                                       }
                                     />
                                   </div>
-                                  {/* Remove seat number editing as we're managing seats automatically */}
+
+                                  {/* Emoji Selection */}
+                                  <div className="space-y-2">
+                                    <Label>Player Emoji</Label>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-10 h-10 flex items-center justify-center border rounded-md">
+                                        {editingPlayer.emoji
+                                          ? editingPlayer.emoji
+                                          : "🙂"}
+                                      </div>
+                                      <Popover
+                                        open={showEmojiPicker}
+                                        onOpenChange={setShowEmojiPicker}
+                                      >
+                                        <PopoverTrigger asChild>
+                                          <Button variant="outline" size="sm">
+                                            <Smile className="h-4 w-4 mr-2" />{" "}
+                                            Select Emoji
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-64">
+                                          <div className="grid grid-cols-5 gap-2">
+                                            {commonEmojis.map((emoji) => (
+                                              <Button
+                                                key={emoji}
+                                                variant="ghost"
+                                                className="h-10 w-10 p-0"
+                                                onClick={() => {
+                                                  setEditingPlayer({
+                                                    ...editingPlayer,
+                                                    emoji: emoji,
+                                                  })
+                                                  setShowEmojiPicker(false)
+                                                }}
+                                              >
+                                                <span className="text-xl">
+                                                  {emoji}
+                                                </span>
+                                              </Button>
+                                            ))}
+                                            <Button
+                                              variant="ghost"
+                                              className="h-10 w-10 p-0"
+                                              onClick={() => {
+                                                setEditingPlayer({
+                                                  ...editingPlayer,
+                                                  emoji: undefined,
+                                                })
+                                                setShowEmojiPicker(false)
+                                              }}
+                                            >
+                                              <span className="text-xl">
+                                                ❌
+                                              </span>
+                                            </Button>
+                                          </div>
+                                        </PopoverContent>
+                                      </Popover>
+                                    </div>
+                                  </div>
+
+                                  {/* Dealer Position Assignment */}
+                                  <div className="space-y-2">
+                                    <Label>Dealer Position</Label>
+                                    <Button
+                                      variant={
+                                        dealerSeat === editingPlayer.seatNumber
+                                          ? "default"
+                                          : "outline"
+                                      }
+                                      onClick={() =>
+                                        setDealerPosition(
+                                          editingPlayer.seatNumber
+                                        )
+                                      }
+                                      className="w-full"
+                                    >
+                                      {dealerSeat === editingPlayer.seatNumber
+                                        ? "Current Dealer"
+                                        : "Set as Dealer"}
+                                    </Button>
+                                  </div>
                                 </div>
                               )}
                               <DialogFooter>

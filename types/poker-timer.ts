@@ -17,6 +17,7 @@ export interface Player {
   seatNumber: number
   buyIns: number
   active: boolean
+  emoji?: string
 }
 
 export interface Settings {

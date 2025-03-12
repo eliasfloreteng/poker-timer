@@ -130,6 +130,33 @@ export function SettingsPanel({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="maxSeats">Maximum Seats</Label>
+            <Input
+              id="maxSeats"
+              type="number"
+              min="2"
+              max="20"
+              value={settings.maxSeats}
+              onChange={(e) => handleNumberChange(e, "maxSeats")}
+            />
+            <p className="text-sm text-muted-foreground">
+              Maximum number of seats at the poker table
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="startingChips">Starting Chips</Label>
+            <Input
+              id="startingChips"
+              type="number"
+              min="100"
+              step="100"
+              value={settings.startingChips}
+              onChange={(e) => handleNumberChange(e, "startingChips")}
+            />
+          </div>
+
           <div className="space-y-2 pt-4 border-t">
             <Label>Chip Denominations</Label>
             <div className="flex flex-wrap gap-2 mb-2">

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TimerDisplay } from "@/components/timer-display"
 import { SettingsPanel } from "@/components/settings-panel"
 import { LevelList } from "@/components/level-list"
+import { SeatingPlan } from "@/components/seating-plan"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Level, Settings } from "@/types/poker-timer"
 import { defaultLevels, defaultSettings } from "@/lib/default-data"
@@ -171,12 +172,13 @@ export function PokerTimer() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-4">
+    <div className="container mx-auto py-6 max-w-4xl">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-5 mb-6">
           <TabsTrigger value="timer">Timer</TabsTrigger>
           <TabsTrigger value="levels">Levels</TabsTrigger>
-          <TabsTrigger value="chips">Counter</TabsTrigger>
+          <TabsTrigger value="players">Players</TabsTrigger>
+          <TabsTrigger value="chips">Chips</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -316,6 +318,22 @@ export function PokerTimer() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="players">
+          <Card>
+            <CardContent className="pt-6">
+              <SeatingPlan settings={settings} onUpdateSettings={setSettings} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="chips">
+          <Card>
+            <CardContent className="pt-6">
+              <ChipCalculator chipDenominations={settings.chipDenominations} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="settings">
           <Card>
             <CardContent className="pt-6">
@@ -341,10 +359,6 @@ export function PokerTimer() {
               />
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="chips">
-          <ChipCalculator chipDenominations={settings.chipDenominations} />
         </TabsContent>
       </Tabs>
     </div>

@@ -11,12 +11,22 @@ export interface ChipDenomination {
   color: string
 }
 
+export interface Player {
+  id: string
+  name: string
+  seatNumber: number
+  buyIns: number
+  active: boolean
+}
+
 export interface Settings {
   soundEnabled: boolean
   darkMode: boolean
   playerCount: number
   startingChips: number
   chipDenominations: ChipDenomination[]
+  players: Player[]
+  maxSeats: number
 }
 
 export interface Preset {

@@ -60,6 +60,8 @@ export const defaultSettings: Settings = {
     { value: 100, color: "bg-blue-400 border-blue-600 text-white" },
     { value: 500, color: "bg-black border-gray-800 text-white" },
   ],
+  players: [],
+  maxSeats: 9,
 }
 
 export const defaultLevels = mediumPaceLevels

@@ -26,7 +26,6 @@ export interface Settings {
   startingChips: number
   chipDenominations: ChipDenomination[]
   players: Player[]
-  maxSeats: number
 }
 
 export interface Preset {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChipIcon } from "@/components/ui/chip-icon"
 import type { ChipDenomination } from "@/types/poker-timer"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 
 interface ChipCount {
   denomination: ChipDenomination
@@ -31,7 +32,10 @@ export function ChipCalculator({
     count: 0,
   }))
 
-  const [chips, setChips] = useState<ChipCount[]>(defaultChips)
+  const [chips, setChips] = useLocalStorage<ChipCount[]>(
+    "chip-calculator",
+    defaultChips
+  )
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   // Initialize refs array with the correct length
@@ -48,8 +52,16 @@ export function ChipCalculator({
       )
       return existingChip || { denomination, count: 0 }
     })
-    setChips(newChips)
-  }, [chipDenominations])
+
+    // Only update if the structure has changed
+    const hasChanged =
+      JSON.stringify(newChips.map((c) => c.denomination.value)) !==
+      JSON.stringify(chips.map((c) => c.denomination.value))
+
+    if (hasChanged) {
+      setChips(newChips)
+    }
+  }, [chipDenominations, chips, setChips])
 
   // Calculate total value
   const totalValue = chips.reduce(

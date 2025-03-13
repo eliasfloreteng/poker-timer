@@ -33,6 +33,25 @@ export const mediumPaceLevels: Level[] = [
   { smallBlind: 1000, bigBlind: 2000, ante: 200, duration: 10, isBreak: false },
 ]
 
+export const longPaceLevels: Level[] = [
+  { smallBlind: 10, bigBlind: 20, ante: 0, duration: 20, isBreak: false },
+  { smallBlind: 20, bigBlind: 40, ante: 0, duration: 20, isBreak: false },
+  { smallBlind: 30, bigBlind: 60, ante: 0, duration: 20, isBreak: false },
+  { smallBlind: 40, bigBlind: 80, ante: 0, duration: 20, isBreak: false },
+  { smallBlind: 0, bigBlind: 0, ante: 0, duration: 20, isBreak: true },
+  { smallBlind: 50, bigBlind: 100, ante: 10, duration: 20, isBreak: false },
+  { smallBlind: 70, bigBlind: 140, ante: 10, duration: 20, isBreak: false },
+  { smallBlind: 100, bigBlind: 200, ante: 20, duration: 20, isBreak: false },
+  { smallBlind: 150, bigBlind: 300, ante: 30, duration: 20, isBreak: false },
+  { smallBlind: 0, bigBlind: 0, ante: 0, duration: 20, isBreak: true },
+  { smallBlind: 200, bigBlind: 400, ante: 40, duration: 20, isBreak: false },
+  { smallBlind: 300, bigBlind: 600, ante: 60, duration: 20, isBreak: false },
+  { smallBlind: 400, bigBlind: 800, ante: 80, duration: 20, isBreak: false },
+  { smallBlind: 0, bigBlind: 0, ante: 0, duration: 20, isBreak: true },
+  { smallBlind: 500, bigBlind: 1000, ante: 100, duration: 20, isBreak: false },
+  { smallBlind: 700, bigBlind: 1400, ante: 140, duration: 20, isBreak: false },
+  { smallBlind: 1000, bigBlind: 2000, ante: 200, duration: 20, isBreak: false },
+]
 export const defaultPresets: Preset[] = [
   {
     id: "fast-pace",
@@ -44,6 +63,12 @@ export const defaultPresets: Preset[] = [
     id: "medium-pace",
     name: "Medium Pace (10 min/round)",
     levels: mediumPaceLevels,
+    isDefault: true,
+  },
+  {
+    id: "long-pace",
+    name: "Long Pace (20 min/round)",
+    levels: longPaceLevels,
     isDefault: true,
   },
 ]

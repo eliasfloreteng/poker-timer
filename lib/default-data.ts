@@ -59,6 +59,9 @@ export const defaultSettings: Settings = {
     { value: 500, color: "bg-black border-gray-800 text-white" },
   ],
   players: [],
+  dealerSeat: null,
+  smallBlindSeat: null,
+  bigBlindSeat: null,
 }
 
 export const defaultLevels = mediumPaceLevels

@@ -6,21 +6,20 @@ export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, (value: T | ((prevValue: T) => T)) => void] {
-  // State to store our value
+  // Always initialize with initialValue first to avoid hydration mismatch
   const [storedValue, setStoredValue] = useState<T>(initialValue)
 
-  // Initialize state on component mount
+  // Load from localStorage once on mount and when key changes
   useEffect(() => {
     try {
-      // Get from local storage by key
       const item = window.localStorage.getItem(key)
-      // Parse stored json or if none return initialValue
-      setStoredValue(item ? JSON.parse(item) : initialValue)
+      if (item) {
+        setStoredValue(JSON.parse(item))
+      }
     } catch (error) {
       console.error(error)
-      setStoredValue(initialValue)
     }
-  }, [key, initialValue])
+  }, [key])
 
   // Return a wrapped version of useState's setter function that
   // persists the new value to localStorage.
@@ -32,9 +31,7 @@ export function useLocalStorage<T>(
       // Save state
       setStoredValue(valueToStore)
       // Save to local storage
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore))
-      }
+      window.localStorage.setItem(key, JSON.stringify(valueToStore))
     } catch (error) {
       console.error(error)
     }

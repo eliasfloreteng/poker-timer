@@ -1,26 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog"
 import {
   Popover,
@@ -34,26 +24,310 @@ import {
   Trash2,
   UserPlus,
   RefreshCw,
-  Coins,
   Award,
-  Repeat,
-  Info,
   User,
   Smile,
-  ChevronUp,
-  ChevronDown,
 } from "lucide-react"
 import { Player, Settings } from "@/types/poker-timer"
 import { nanoid } from "nanoid"
 import { cn } from "@/lib/utils"
+
+// Player Card Component
+interface PlayerCardProps {
+  player: Player
+  role: string | null
+  isDealer: boolean
+  isSmallBlind: boolean
+  isBigBlind: boolean
+  onEditPlayer: (player: Player) => void
+  onRemovePlayer: (playerId: string) => void
+  onToggleActive: (playerId: string) => void
+  onIncrementBuyIn: (playerId: string) => void
+  onDecrementBuyIn: (playerId: string) => void
+  onSetDealer: (seatNumber: number) => void
+  getRoleDisplayName: (role: string | null) => string
+}
+
+function PlayerCard({
+  player,
+  role,
+  isDealer,
+  isSmallBlind,
+  isBigBlind,
+  onEditPlayer,
+  onRemovePlayer,
+  onToggleActive,
+  onIncrementBuyIn,
+  onDecrementBuyIn,
+  onSetDealer,
+  getRoleDisplayName,
+}: PlayerCardProps) {
+  return (
+    <Card
+      className={cn(
+        "transition-all duration-300 h-full",
+        player.active ? "border-2 border-primary" : "opacity-60 border-dashed"
+      )}
+    >
+      <CardContent className="p-4 h-full">
+        <div className="flex flex-col h-full">
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center text-lg bg-muted",
+                  (isDealer || isSmallBlind || isBigBlind) &&
+                    "bg-primary text-primary-foreground"
+                )}
+              >
+                {player.emoji || <User className="h-4 w-4" />}
+              </div>
+              <div>
+                <h3 className="font-medium text-sm">
+                  {player.name || `Player ${player.seatNumber}`}
+                </h3>
+                <div className="text-xs text-muted-foreground">
+                  Seat {player.seatNumber}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => onEditPlayer(player)}
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive"
+                onClick={() => onRemovePlayer(player.id)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2 mb-2 flex-1">
+            {role && (
+              <div className="flex items-center justify-center py-1 px-2 rounded-md bg-primary/10 text-primary text-xs font-medium">
+                {getRoleDisplayName(role)}
+              </div>
+            )}
+            {player.active && !role && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs"
+                onClick={() => onSetDealer(player.seatNumber)}
+              >
+                <Award className="h-3.5 w-3.5 mr-1" />
+                Set as Dealer
+              </Button>
+            )}
+          </div>
+
+          <div className="flex justify-between items-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "text-xs h-7",
+                player.active ? "border-green-500" : "border-gray-500"
+              )}
+              onClick={() => onToggleActive(player.id)}
+            >
+              {player.active ? "Active" : "Inactive"}
+            </Button>
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => onDecrementBuyIn(player.id)}
+                disabled={player.buyIns <= 0}
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </Button>
+              <div className="flex items-center justify-center min-w-8 px-1 h-7 border rounded-md text-xs font-medium">
+                {player.buyIns}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => onIncrementBuyIn(player.id)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Extract EditPlayerDialog component
+interface EditPlayerDialogProps {
+  player: Player | null
+  onSave: (player: Player) => void
+  onCancel: () => void
+  commonEmojis: string[]
+}
+
+function EditPlayerDialog({
+  player,
+  onSave,
+  onCancel,
+  commonEmojis,
+}: EditPlayerDialogProps) {
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(player)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+
+  // Update local state when player prop changes
+  useEffect(() => {
+    setEditingPlayer(player)
+  }, [player])
+
+  if (!editingPlayer) return null
+
+  return (
+    <div className="space-y-4 py-4">
+      <div className="space-y-2">
+        <Label htmlFor="playerName">Player Name</Label>
+        <Input
+          id="playerName"
+          value={editingPlayer.name}
+          onChange={(e) =>
+            setEditingPlayer({
+              ...editingPlayer,
+              name: e.target.value,
+            })
+          }
+        />
+      </div>
+
+      {/* Emoji Selection */}
+      <div className="space-y-2">
+        <Label>Player Emoji</Label>
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 flex items-center justify-center border rounded-md">
+            {editingPlayer.emoji ? editingPlayer.emoji : "🙂"}
+          </div>
+          <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Smile className="h-4 w-4 mr-2" /> Select Emoji
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64">
+              <div className="grid grid-cols-5 gap-2">
+                {commonEmojis.map((emoji) => (
+                  <Button
+                    key={emoji}
+                    variant="ghost"
+                    className="h-10 w-10 p-0"
+                    onClick={() => {
+                      setEditingPlayer({
+                        ...editingPlayer,
+                        emoji: emoji,
+                      })
+                      setShowEmojiPicker(false)
+                    }}
+                  >
+                    <span className="text-xl">{emoji}</span>
+                  </Button>
+                ))}
+                <Button
+                  variant="ghost"
+                  className="h-10 w-10 p-0"
+                  onClick={() => {
+                    setEditingPlayer({
+                      ...editingPlayer,
+                      emoji: undefined,
+                    })
+                    setShowEmojiPicker(false)
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="buyIns">Buy-ins</Label>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              if (editingPlayer.buyIns > 0) {
+                setEditingPlayer({
+                  ...editingPlayer,
+                  buyIns: editingPlayer.buyIns - 1,
+                })
+              }
+            }}
+            disabled={editingPlayer.buyIns <= 0}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <Input
+            id="buyIns"
+            type="number"
+            min="0"
+            value={editingPlayer.buyIns}
+            onChange={(e) =>
+              setEditingPlayer({
+                ...editingPlayer,
+                buyIns: Math.max(0, parseInt(e.target.value) || 0),
+              })
+            }
+            className="w-20 text-center"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() =>
+              setEditingPlayer({
+                ...editingPlayer,
+                buyIns: editingPlayer.buyIns + 1,
+              })
+            }
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button onClick={() => onSave(editingPlayer)}>Save</Button>
+      </DialogFooter>
+    </div>
+  )
+}
 
 interface SeatingPlanProps {
   settings: Settings
   onUpdateSettings: (settings: Settings) => void
 }
 
-export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
-  const [newPlayerName, setNewPlayerName] = useState("")
+// Custom hook for player management
+function usePlayerManagement(
+  settings: Settings,
+  onUpdateSettings: (settings: Settings) => void
+) {
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null)
   const [randomizeInProgress, setRandomizeInProgress] = useState(false)
   const [dealerSeat, setDealerSeat] = useState<number | null>(null)
@@ -62,6 +336,261 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
+  // Initialize dealer and blind positions from settings if available
+  useEffect(() => {
+    setDealerSeat(settings.dealerSeat)
+    setSmallBlindSeat(settings.smallBlindSeat)
+    setBigBlindSeat(settings.bigBlindSeat)
+  }, [settings])
+
+  const addPlayer = () => {
+    const newPlayer: Player = {
+      id: nanoid(),
+      name: "",
+      seatNumber: settings.players.length + 1,
+      active: true,
+      buyIns: 1,
+    }
+
+    const updatedSettings = {
+      ...settings,
+      players: [...settings.players, newPlayer],
+    }
+
+    onUpdateSettings(updatedSettings)
+    setEditingPlayer(newPlayer)
+  }
+
+  const updatePlayer = (updatedPlayer: Player) => {
+    const updatedPlayers = settings.players.map((player) =>
+      player.id === updatedPlayer.id ? updatedPlayer : player
+    )
+
+    onUpdateSettings({
+      ...settings,
+      players: updatedPlayers,
+    })
+
+    setEditingPlayer(null)
+  }
+
+  const removePlayer = (playerId: string) => {
+    const updatedPlayers = settings.players
+      .filter((player) => player.id !== playerId)
+      .map((player, index) => ({
+        ...player,
+        seatNumber: index + 1,
+      }))
+
+    // Reset dealer/blind positions if the removed player had one of these roles
+    const removedPlayer = settings.players.find((p) => p.id === playerId)
+    const removedSeat = removedPlayer?.seatNumber
+
+    const updatedSettings = {
+      ...settings,
+      players: updatedPlayers,
+      dealerSeat: removedSeat === dealerSeat ? null : dealerSeat,
+      smallBlindSeat: removedSeat === smallBlindSeat ? null : smallBlindSeat,
+      bigBlindSeat: removedSeat === bigBlindSeat ? null : bigBlindSeat,
+    }
+
+    onUpdateSettings(updatedSettings)
+
+    // Update the local state variables
+    if (removedSeat === dealerSeat) setDealerSeat(null)
+    if (removedSeat === smallBlindSeat) setSmallBlindSeat(null)
+    if (removedSeat === bigBlindSeat) setBigBlindSeat(null)
+  }
+
+  const incrementBuyIn = (playerId: string) => {
+    const updatedPlayers = settings.players.map((player) =>
+      player.id === playerId ? { ...player, buyIns: player.buyIns + 1 } : player
+    )
+
+    onUpdateSettings({
+      ...settings,
+      players: updatedPlayers,
+    })
+  }
+
+  const decrementBuyIn = (playerId: string) => {
+    const updatedPlayers = settings.players.map((player) =>
+      player.id === playerId && player.buyIns > 0
+        ? { ...player, buyIns: player.buyIns - 1 }
+        : player
+    )
+
+    onUpdateSettings({
+      ...settings,
+      players: updatedPlayers,
+    })
+  }
+
+  const randomizeSeats = () => {
+    setRandomizeInProgress(true)
+
+    // Make a copy of active players
+    const activePlayers = settings.players.filter((player) => player.active)
+
+    // Shuffle the active players
+    const shuffledPlayers = [...activePlayers].sort(() => Math.random() - 0.5)
+
+    // Inactive players remain in their original positions
+    const inactivePlayers = settings.players.filter((player) => !player.active)
+
+    // Assign new seat numbers to active players
+    const reseatedPlayers = shuffledPlayers.map((player, index) => ({
+      ...player,
+      seatNumber: index + 1,
+    }))
+
+    // Combine active and inactive players
+    const allPlayers = [...reseatedPlayers, ...inactivePlayers]
+
+    // Sort by seat number for display
+    allPlayers.sort((a, b) => a.seatNumber - b.seatNumber)
+
+    onUpdateSettings({
+      ...settings,
+      players: allPlayers,
+      // Reset dealer and blind positions when seats are randomized
+      dealerSeat: null,
+      smallBlindSeat: null,
+      bigBlindSeat: null,
+    })
+
+    // Reset local state
+    setDealerSeat(null)
+    setSmallBlindSeat(null)
+    setBigBlindSeat(null)
+
+    setTimeout(() => {
+      setRandomizeInProgress(false)
+    }, 500)
+  }
+
+  const togglePlayerActive = (playerId: string) => {
+    const updatedPlayers = settings.players.map((player) =>
+      player.id === playerId ? { ...player, active: !player.active } : player
+    )
+
+    onUpdateSettings({
+      ...settings,
+      players: updatedPlayers,
+    })
+  }
+
+  const randomizeDealer = () => {
+    const activePlayers = settings.players.filter((player) => player.active)
+
+    if (activePlayers.length > 0) {
+      const randomIndex = Math.floor(Math.random() * activePlayers.length)
+      const randomPlayer = activePlayers[randomIndex]
+
+      setDealerPosition(randomPlayer.seatNumber)
+    }
+  }
+
+  const setDealerPosition = (seatNumber: number) => {
+    setDealerSeat(seatNumber)
+    setAutoBlinds(seatNumber)
+
+    onUpdateSettings({
+      ...settings,
+      dealerSeat: seatNumber,
+      smallBlindSeat: smallBlindSeat,
+      bigBlindSeat: bigBlindSeat,
+    })
+  }
+
+  const setAutoBlinds = (dealerPosition: number) => {
+    const activePlayers = settings.players
+      .filter((player) => player.active)
+      .sort((a, b) => a.seatNumber - b.seatNumber)
+
+    if (activePlayers.length < 2) return
+
+    const dealerIndex = activePlayers.findIndex(
+      (player) => player.seatNumber === dealerPosition
+    )
+
+    if (dealerIndex === -1) return
+
+    // Small blind is the next active player after the dealer
+    const smallBlindIndex = (dealerIndex + 1) % activePlayers.length
+    const smallBlindPosition = activePlayers[smallBlindIndex].seatNumber
+
+    // Big blind is the next active player after the small blind
+    const bigBlindIndex = (smallBlindIndex + 1) % activePlayers.length
+    const bigBlindPosition = activePlayers[bigBlindIndex].seatNumber
+
+    setSmallBlindSeat(smallBlindPosition)
+    setBigBlindSeat(bigBlindPosition)
+
+    onUpdateSettings({
+      ...settings,
+      dealerSeat: dealerPosition,
+      smallBlindSeat: smallBlindPosition,
+      bigBlindSeat: bigBlindPosition,
+    })
+  }
+
+  const randomizeAllPositions = () => {
+    randomizeSeats()
+    setTimeout(() => randomizeDealer(), 600)
+  }
+
+  const getPlayerInSeat = (seatNumber: number | null) => {
+    if (seatNumber === null) return null
+    return (
+      settings.players.find((player) => player.seatNumber === seatNumber) ||
+      null
+    )
+  }
+
+  const getPlayerRole = (player: Player) => {
+    if (player.seatNumber === dealerSeat) return "dealer"
+    if (player.seatNumber === smallBlindSeat) return "smallBlind"
+    if (player.seatNumber === bigBlindSeat) return "bigBlind"
+    return null
+  }
+
+  const getRoleDisplayName = (role: string | null) => {
+    if (role === "dealer") return "Dealer (D)"
+    if (role === "smallBlind") return "Small Blind (SB)"
+    if (role === "bigBlind") return "Big Blind (BB)"
+    return ""
+  }
+
+  return {
+    editingPlayer,
+    setEditingPlayer,
+    randomizeInProgress,
+    dealerSeat,
+    smallBlindSeat,
+    bigBlindSeat,
+    selectedPlayer,
+    setSelectedPlayer,
+    showEmojiPicker,
+    setShowEmojiPicker,
+    addPlayer,
+    updatePlayer,
+    removePlayer,
+    incrementBuyIn,
+    decrementBuyIn,
+    randomizeSeats,
+    togglePlayerActive,
+    randomizeDealer,
+    setDealerPosition,
+    setAutoBlinds,
+    randomizeAllPositions,
+    getPlayerInSeat,
+    getPlayerRole,
+    getRoleDisplayName,
+  }
+}
+
+export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
   // Common emojis for easy selection
   const commonEmojis = [
     "😀",
@@ -94,969 +623,87 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
     "♣️",
   ]
 
-  // Calculate the current number of seats based on player count
-  const seatCount = Math.max(settings.players.length, 2)
-
-  const addPlayer = () => {
-    if (newPlayerName.trim()) {
-      // Create a new player - seat number will be assigned when displaying
-      const newPlayer: Player = {
-        id: nanoid(),
-        name: newPlayerName.trim(),
-        seatNumber: settings.players.length + 1, // Incremental seat number
-        buyIns: 1,
-        active: true,
-        emoji: undefined, // Default to no emoji
-      }
-
-      onUpdateSettings({
-        ...settings,
-        players: [...settings.players, newPlayer],
-      })
-      setNewPlayerName("")
-    }
-  }
-
-  const updatePlayer = (updatedPlayer: Player) => {
-    const updatedPlayers = settings.players.map((player) =>
-      player.id === updatedPlayer.id ? updatedPlayer : player
-    )
-
-    onUpdateSettings({
-      ...settings,
-      players: updatedPlayers,
-    })
-    setEditingPlayer(null)
-  }
-
-  const removePlayer = (playerId: string) => {
-    // Get the player we're removing
-    const playerToRemove = settings.players.find((p) => p.id === playerId)
-
-    // Remove the player
-    let updatedPlayers = settings.players.filter((p) => p.id !== playerId)
-
-    // Renumber the remaining players to ensure sequential seat numbers
-    updatedPlayers = updatedPlayers.map((player, index) => ({
-      ...player,
-      seatNumber: index + 1,
-    }))
-
-    // Check if we're removing a player in a special seat and reset it
-    if (playerToRemove) {
-      if (dealerSeat === playerToRemove.seatNumber) setDealerSeat(null)
-      if (smallBlindSeat === playerToRemove.seatNumber) setSmallBlindSeat(null)
-      if (bigBlindSeat === playerToRemove.seatNumber) setBigBlindSeat(null)
-    }
-
-    onUpdateSettings({
-      ...settings,
-      players: updatedPlayers,
-    })
-  }
-
-  const incrementBuyIn = (playerId: string) => {
-    const updatedPlayers = settings.players.map((player) =>
-      player.id === playerId ? { ...player, buyIns: player.buyIns + 1 } : player
-    )
-
-    onUpdateSettings({
-      ...settings,
-      players: updatedPlayers,
-    })
-  }
-
-  const decrementBuyIn = (playerId: string) => {
-    const updatedPlayers = settings.players.map((player) =>
-      player.id === playerId && player.buyIns > 1
-        ? { ...player, buyIns: player.buyIns - 1 }
-        : player
-    )
-
-    onUpdateSettings({
-      ...settings,
-      players: updatedPlayers,
-    })
-  }
-
-  const randomizeSeats = () => {
-    setRandomizeInProgress(true)
-
-    // Get active players
-    const activePlayers = settings.players.filter((p) => p.active)
-    if (activePlayers.length < 2) {
-      setRandomizeInProgress(false)
-      return
-    }
-
-    // Create a shuffled copy of the active players
-    const shuffledPlayers = [...activePlayers].sort(() => Math.random() - 0.5)
-
-    // Create a copy of the inactive players (we won't shuffle these)
-    const inactivePlayers = settings.players.filter((p) => !p.active)
-
-    // Reassign the seat numbers sequentially for active players
-    const reorderedPlayers = shuffledPlayers.map((player, index) => ({
-      ...player,
-      seatNumber: index + 1,
-    }))
-
-    // Add inactive players after active ones
-    const allPlayers = [
-      ...reorderedPlayers,
-      ...inactivePlayers.map((player, index) => ({
-        ...player,
-        seatNumber: reorderedPlayers.length + index + 1,
-      })),
-    ]
-
-    onUpdateSettings({
-      ...settings,
-      players: allPlayers,
-    })
-
-    // Reset positions since players have changed seats
-    setDealerSeat(null)
-    setSmallBlindSeat(null)
-    setBigBlindSeat(null)
-
-    setRandomizeInProgress(false)
-  }
-
-  const togglePlayerActive = (playerId: string) => {
-    const playerToToggle = settings.players.find((p) => p.id === playerId)
-    const updatedPlayers = settings.players.map((player) =>
-      player.id === playerId ? { ...player, active: !player.active } : player
-    )
-
-    // Check if we're deactivating a player in a special seat and reset it
-    if (playerToToggle && playerToToggle.active) {
-      if (dealerSeat === playerToToggle.seatNumber) setDealerSeat(null)
-      if (smallBlindSeat === playerToToggle.seatNumber) setSmallBlindSeat(null)
-      if (bigBlindSeat === playerToToggle.seatNumber) setBigBlindSeat(null)
-    }
-
-    onUpdateSettings({
-      ...settings,
-      players: updatedPlayers,
-    })
-  }
-
-  const randomizeDealer = () => {
-    const activePlayers = settings.players.filter((p) => p.active)
-    if (activePlayers.length === 0) return
-
-    // Get a random active player for dealer
-    const randomIndex = Math.floor(Math.random() * activePlayers.length)
-    const randomSeat = activePlayers[randomIndex].seatNumber
-    setDealerSeat(randomSeat)
-
-    // Automatically set blinds based on dealer position
-    setAutoBlinds(randomSeat)
-  }
-
-  const setAutoBlinds = (dealerPosition: number) => {
-    // Find active players and sort by seat number
-    const activePlayers = settings.players
-      .filter((p) => p.active)
-      .sort((a, b) => a.seatNumber - b.seatNumber)
-
-    if (activePlayers.length < 3) return // Need at least 3 players to set blinds
-
-    // Find the dealer's index in the sorted array
-    const dealerIndex = activePlayers.findIndex(
-      (p) => p.seatNumber === dealerPosition
-    )
-    if (dealerIndex === -1) return
-
-    // Small blind is next player after dealer
-    const sbIndex = (dealerIndex + 1) % activePlayers.length
-    // Big blind is next player after small blind
-    const bbIndex = (dealerIndex + 2) % activePlayers.length
-
-    setSmallBlindSeat(activePlayers[sbIndex].seatNumber)
-    setBigBlindSeat(activePlayers[bbIndex].seatNumber)
-  }
-
-  // Randomize all positions (dealer and blinds) at once
-  const randomizeAllPositions = () => {
-    randomizeDealer()
-  }
-
-  // Get the player who is sitting in a specific seat
-  const getPlayerInSeat = (seatNumber: number | null) => {
-    if (seatNumber === null) return null
-    return settings.players.find((p) => p.active && p.seatNumber === seatNumber)
-  }
-
-  // Get active players
-  const activePlayers = settings.players.filter((p) => p.active)
-
-  // Sort players by seat number for display
-  const sortedPlayers = [...settings.players].sort(
-    (a, b) => a.seatNumber - b.seatNumber
-  )
-
-  // Get player role
-  const getPlayerRole = (player: Player) => {
-    if (dealerSeat === player.seatNumber) return "dealer"
-    if (smallBlindSeat === player.seatNumber) return "smallBlind"
-    if (bigBlindSeat === player.seatNumber) return "bigBlind"
-    return null
-  }
-
-  // Get role display name
-  const getRoleDisplayName = (role: string | null) => {
-    if (role === "dealer") return "Dealer"
-    if (role === "smallBlind") return "Small Blind"
-    if (role === "bigBlind") return "Big Blind"
-    return null
-  }
-
-  // Calculate player position in circle
-  const calculatePosition = (index: number, total: number) => {
-    // Only use active players for calculation
-    const activeTotal = activePlayers.length
-    if (activeTotal === 0) return { top: "50%", left: "50%" }
-
-    // Adjust index to only consider active players
-    if (!activePlayers.includes(sortedPlayers[index])) {
-      return { top: "50%", left: "50%" }
-    }
-
-    const activeIndex = activePlayers.findIndex(
-      (p) => p.id === sortedPlayers[index].id
-    )
-
-    // Calculate position on a circle
-    // Start from top (12 o'clock) and go clockwise
-    const angleStep = (2 * Math.PI) / activeTotal
-    const angle = angleStep * activeIndex - Math.PI / 2 // Start from top
-
-    // Table radius - adjust as needed
-    const radius = activeTotal <= 4 ? 35 : activeTotal <= 6 ? 40 : 45
-
-    const x = 50 + radius * Math.cos(angle)
-    const y = 50 + radius * Math.sin(angle)
-
-    return {
-      left: `${x}%`,
-      top: `${y}%`,
-    }
-  }
-
-  // Function to manually set dealer position
-  const setDealerPosition = (seatNumber: number) => {
-    setDealerSeat(seatNumber)
-    setAutoBlinds(seatNumber)
-  }
-
-  // Function to manually change a player's seat number
-  const changePlayerSeat = (playerId: string, newSeatNumber: number) => {
-    // Get the player we're moving
-    const currentPlayer = settings.players.find((p) => p.id === playerId)
-    if (!currentPlayer) return
-
-    // Find the player who is currently in the target seat
-    const targetPlayer = settings.players.find(
-      (p) => p.seatNumber === newSeatNumber && p.id !== playerId
-    )
-
-    // Update player positions
-    const updatedPlayers = settings.players.map((player) => {
-      if (player.id === playerId) {
-        // Move current player to new seat
-        return { ...player, seatNumber: newSeatNumber }
-      } else if (player.id === targetPlayer?.id) {
-        // Swap the other player to current player's seat
-        return { ...player, seatNumber: currentPlayer.seatNumber }
-      }
-      return player
-    })
-
-    // Update settings with new player positions
-    onUpdateSettings({
-      ...settings,
-      players: updatedPlayers,
-    })
-
-    // Update dealer, small blind and big blind positions if needed
-    if (dealerSeat === newSeatNumber) {
-      setDealerSeat(currentPlayer.seatNumber)
-    } else if (dealerSeat === currentPlayer.seatNumber) {
-      setDealerSeat(newSeatNumber)
-    }
-
-    if (smallBlindSeat === newSeatNumber) {
-      setSmallBlindSeat(currentPlayer.seatNumber)
-    } else if (smallBlindSeat === currentPlayer.seatNumber) {
-      setSmallBlindSeat(newSeatNumber)
-    }
-
-    if (bigBlindSeat === newSeatNumber) {
-      setBigBlindSeat(currentPlayer.seatNumber)
-    } else if (bigBlindSeat === currentPlayer.seatNumber) {
-      setBigBlindSeat(newSeatNumber)
-    }
-  }
+  const playerManager = usePlayerManagement(settings, onUpdateSettings)
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold mb-4">Tournament Seating Plan</h2>
-
-        {/* Player management buttons */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <Input
-            value={newPlayerName}
-            onChange={(e) => setNewPlayerName(e.target.value)}
-            placeholder="Player name"
-            className="flex-1 min-w-[200px]"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                addPlayer()
-              }
-            }}
-          />
-          <Button onClick={addPlayer}>
-            <UserPlus className="h-4 w-4 mr-2" /> Add Player
-          </Button>
-          <Button
-            variant="outline"
-            onClick={randomizeSeats}
-            disabled={randomizeInProgress || activePlayers.length < 2}
-          >
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${
-                randomizeInProgress ? "animate-spin" : ""
-              }`}
-            />
-            Shuffle Players
-          </Button>
-          <Button
-            variant="outline"
-            onClick={randomizeAllPositions}
-            disabled={activePlayers.length < 3}
-          >
-            <Repeat className="h-4 w-4 mr-2" />
-            Assign Dealer & Blinds
-          </Button>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Seating Plan</h2>
+          <p className="text-muted-foreground">
+            Manage players and assign positions
+          </p>
         </div>
 
-        {/* Position display */}
-        {activePlayers.length > 0 && (
-          <div className="mb-4 p-4 bg-muted/30 rounded-md flex flex-wrap gap-3 items-center">
-            <div className="flex-1 min-w-[150px]">
-              <div className="text-sm font-medium mb-1">Dealer</div>
-              <div className="flex items-center">
-                <Award className="h-4 w-4 mr-2 text-yellow-500" />
-                {getPlayerInSeat(dealerSeat) ? (
-                  <span>
-                    Seat {dealerSeat}: {getPlayerInSeat(dealerSeat)?.name}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Not assigned</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-[150px]">
-              <div className="text-sm font-medium mb-1">Small Blind</div>
-              <div className="flex items-center">
-                <Coins className="h-4 w-4 mr-2 text-blue-500" />
-                {getPlayerInSeat(smallBlindSeat) ? (
-                  <span>
-                    Seat {smallBlindSeat}:{" "}
-                    {getPlayerInSeat(smallBlindSeat)?.name}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Not assigned</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-[150px]">
-              <div className="text-sm font-medium mb-1">Big Blind</div>
-              <div className="flex items-center">
-                <Coins className="h-4 w-4 mr-2 text-purple-500" />
-                {getPlayerInSeat(bigBlindSeat) ? (
-                  <span>
-                    Seat {bigBlindSeat}: {getPlayerInSeat(bigBlindSeat)?.name}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Not assigned</span>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Circular poker table visualization */}
-        {settings.players.length > 0 && (
-          <div className="mb-6">
-            <div className="relative w-full aspect-square max-w-[600px] mx-auto">
-              {/* Table background */}
-              <div className="absolute inset-[15%] rounded-full bg-green-700 dark:bg-green-800 border-8 border-brown-800 dark:border-stone-900 shadow-lg flex items-center justify-center">
-                <div className="text-white text-center">
-                  <span className="text-lg font-medium">Poker Table</span>
-                  {dealerSeat && getPlayerInSeat(dealerSeat) && (
-                    <div className="text-sm mt-1">
-                      Dealer: Seat {dealerSeat} -{" "}
-                      {getPlayerInSeat(dealerSeat)?.name}
-                      {getPlayerInSeat(dealerSeat)?.emoji && (
-                        <span className="ml-1">
-                          {getPlayerInSeat(dealerSeat)?.emoji}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Players around the table */}
-              {sortedPlayers.map((player, index) => {
-                if (!player.active) return null
-
-                const position = calculatePosition(index, sortedPlayers.length)
-                const role = getPlayerRole(player)
-
-                // Role badge colors
-                const roleColors = {
-                  dealer: "bg-yellow-500",
-                  smallBlind: "bg-blue-500",
-                  bigBlind: "bg-purple-500",
-                }
-
-                return (
-                  <Dialog key={player.id}>
-                    <DialogTrigger asChild>
-                      <button
-                        className="absolute w-16 h-16 rounded-full bg-white dark:bg-gray-800 shadow-md border-2 border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform cursor-pointer"
-                        style={{ top: position.top, left: position.left }}
-                      >
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700">
-                          {player.emoji ? (
-                            <span className="text-xl">{player.emoji}</span>
-                          ) : (
-                            <User className="w-6 h-6 text-gray-500 dark:text-gray-300" />
-                          )}
-                        </div>
-                        <div className="text-xs mt-1 font-medium truncate max-w-[95%] text-gray-800 dark:text-gray-200">
-                          {player.name}
-                        </div>
-                        <div className="absolute -top-1 -right-1 flex gap-0.5">
-                          {role && (
-                            <span
-                              className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] text-white ${
-                                roleColors[role as keyof typeof roleColors]
-                              }`}
-                              title={getRoleDisplayName(role) || ""}
-                            >
-                              {role === "dealer"
-                                ? "D"
-                                : role === "smallBlind"
-                                ? "S"
-                                : "B"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="absolute -bottom-1 -left-1 bg-gray-800 dark:bg-gray-900 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                          {player.seatNumber}
-                        </div>
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          Player Details: {player.name}{" "}
-                          {player.emoji && <span>{player.emoji}</span>}
-                          {role && (
-                            <span
-                              className={`ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs text-white ${
-                                roleColors[role as keyof typeof roleColors]
-                              }`}
-                            >
-                              {role === "dealer"
-                                ? "D"
-                                : role === "smallBlind"
-                                ? "SB"
-                                : "BB"}
-                            </span>
-                          )}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="grid grid-cols-2 gap-4 py-4">
-                        <div>
-                          <Label className="text-muted-foreground">Seat</Label>
-                          <div className="font-medium">{player.seatNumber}</div>
-                        </div>
-                        <div>
-                          <Label className="text-muted-foreground">
-                            Buy-ins
-                          </Label>
-                          <div className="font-medium">{player.buyIns}</div>
-                        </div>
-                        <div>
-                          <Label className="text-muted-foreground">
-                            Status
-                          </Label>
-                          <div
-                            className={`font-medium ${
-                              player.active
-                                ? "text-green-600 dark:text-green-500"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {player.active ? "Active" : "Inactive"}
-                          </div>
-                        </div>
-                        <div>
-                          <Label className="text-muted-foreground">Role</Label>
-                          <div className="font-medium">
-                            {getRoleDisplayName(role) || "None"}
-                          </div>
-                        </div>
-                      </div>
-                      <DialogFooter className="flex gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => setEditingPlayer(player)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Edit Player</DialogTitle>
-                            </DialogHeader>
-                            {editingPlayer && (
-                              <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="playerName">
-                                    Player Name
-                                  </Label>
-                                  <Input
-                                    id="playerName"
-                                    value={editingPlayer.name}
-                                    onChange={(e) =>
-                                      setEditingPlayer({
-                                        ...editingPlayer,
-                                        name: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </div>
-
-                                {/* Emoji Selection */}
-                                <div className="space-y-2">
-                                  <Label>Player Emoji</Label>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-10 h-10 flex items-center justify-center border rounded-md">
-                                      {editingPlayer.emoji
-                                        ? editingPlayer.emoji
-                                        : "🙂"}
-                                    </div>
-                                    <Popover
-                                      open={showEmojiPicker}
-                                      onOpenChange={setShowEmojiPicker}
-                                    >
-                                      <PopoverTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                          <Smile className="h-4 w-4 mr-2" />{" "}
-                                          Select Emoji
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-64">
-                                        <div className="grid grid-cols-5 gap-2">
-                                          {commonEmojis.map((emoji) => (
-                                            <Button
-                                              key={emoji}
-                                              variant="ghost"
-                                              className="h-10 w-10 p-0"
-                                              onClick={() => {
-                                                const updatedPlayer = {
-                                                  ...editingPlayer,
-                                                  emoji: emoji,
-                                                }
-                                                updatePlayer(updatedPlayer)
-                                                setShowEmojiPicker(false)
-                                              }}
-                                            >
-                                              <span className="text-xl">
-                                                {emoji}
-                                              </span>
-                                            </Button>
-                                          ))}
-                                          <Button
-                                            variant="ghost"
-                                            className="h-10 w-10 p-0"
-                                            onClick={() => {
-                                              const updatedPlayer = {
-                                                ...editingPlayer,
-                                                emoji: undefined,
-                                              }
-                                              updatePlayer(updatedPlayer)
-                                              setShowEmojiPicker(false)
-                                            }}
-                                          >
-                                            <span className="text-xl">❌</span>
-                                          </Button>
-                                        </div>
-                                      </PopoverContent>
-                                    </Popover>
-                                  </div>
-                                </div>
-
-                                {/* Dealer Position Assignment */}
-                                <div className="space-y-2">
-                                  <Label>Dealer Position</Label>
-                                  <Button
-                                    variant={
-                                      dealerSeat === editingPlayer.seatNumber
-                                        ? "default"
-                                        : "outline"
-                                    }
-                                    onClick={() =>
-                                      setDealerPosition(
-                                        editingPlayer.seatNumber
-                                      )
-                                    }
-                                    className="w-full"
-                                  >
-                                    {dealerSeat === editingPlayer.seatNumber
-                                      ? "Current Dealer"
-                                      : "Set as Dealer"}
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                            <DialogFooter>
-                              <DialogClose asChild>
-                                <Button variant="outline">Cancel</Button>
-                              </DialogClose>
-                              <DialogClose asChild>
-                                <Button
-                                  onClick={() =>
-                                    editingPlayer && updatePlayer(editingPlayer)
-                                  }
-                                >
-                                  Save Changes
-                                </Button>
-                              </DialogClose>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-
-                        {/* Existing buttons */}
-                        <Button
-                          variant={player.active ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => togglePlayerActive(player.id)}
-                          className="flex-1"
-                        >
-                          {player.active ? "Set Inactive" : "Set Active"}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Player list table */}
-        {settings.players.length > 0 ? (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">Seat</TableHead>
-                    <TableHead>Player</TableHead>
-                    <TableHead className="w-24 text-center">Role</TableHead>
-                    <TableHead className="w-24 text-center">Buy-ins</TableHead>
-                    <TableHead className="w-24 text-center">Status</TableHead>
-                    <TableHead className="w-32 text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedPlayers.map((player) => (
-                    <TableRow
-                      key={player.id}
-                      className={!player.active ? "opacity-60" : ""}
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <div>{player.seatNumber}</div>
-                          <div className="flex flex-col">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-5 w-5 p-0"
-                              onClick={() => {
-                                const prevSeatNumber = player.seatNumber - 1
-                                if (prevSeatNumber >= 1) {
-                                  changePlayerSeat(player.id, prevSeatNumber)
-                                }
-                              }}
-                              disabled={player.seatNumber <= 1}
-                              title="Move to previous seat"
-                            >
-                              <ChevronUp className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-5 w-5 p-0"
-                              onClick={() => {
-                                const nextSeatNumber = player.seatNumber + 1
-                                if (nextSeatNumber <= settings.players.length) {
-                                  changePlayerSeat(player.id, nextSeatNumber)
-                                }
-                              }}
-                              disabled={
-                                player.seatNumber >= settings.players.length
-                              }
-                              title="Move to next seat"
-                            >
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {player.emoji && (
-                            <span className="text-xl">{player.emoji}</span>
-                          )}
-                          {player.name}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {player.active && (
-                          <div className="flex items-center justify-center gap-1">
-                            {dealerSeat === player.seatNumber && (
-                              <span
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-                                title="Dealer"
-                              >
-                                D
-                              </span>
-                            )}
-                            {smallBlindSeat === player.seatNumber && (
-                              <span
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                                title="Small Blind"
-                              >
-                                SB
-                              </span>
-                            )}
-                            {bigBlindSeat === player.seatNumber && (
-                              <span
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                                title="Big Blind"
-                              >
-                                BB
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => decrementBuyIn(player.id)}
-                            disabled={player.buyIns <= 1}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span>{player.buyIns}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => incrementBuyIn(player.id)}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant={player.active ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => togglePlayerActive(player.id)}
-                        >
-                          {player.active ? "Active" : "Inactive"}
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => setEditingPlayer(player)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit Player</DialogTitle>
-                              </DialogHeader>
-                              {editingPlayer && (
-                                <div className="space-y-4 py-4">
-                                  <div className="space-y-2">
-                                    <Label htmlFor="playerName">
-                                      Player Name
-                                    </Label>
-                                    <Input
-                                      id="playerName"
-                                      value={editingPlayer.name}
-                                      onChange={(e) =>
-                                        setEditingPlayer({
-                                          ...editingPlayer,
-                                          name: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  </div>
-
-                                  {/* Emoji Selection */}
-                                  <div className="space-y-2">
-                                    <Label>Player Emoji</Label>
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-10 h-10 flex items-center justify-center border rounded-md">
-                                        {editingPlayer.emoji
-                                          ? editingPlayer.emoji
-                                          : "🙂"}
-                                      </div>
-                                      <Popover
-                                        open={showEmojiPicker}
-                                        onOpenChange={setShowEmojiPicker}
-                                      >
-                                        <PopoverTrigger asChild>
-                                          <Button variant="outline" size="sm">
-                                            <Smile className="h-4 w-4 mr-2" />{" "}
-                                            Select Emoji
-                                          </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-64">
-                                          <div className="grid grid-cols-5 gap-2">
-                                            {commonEmojis.map((emoji) => (
-                                              <Button
-                                                key={emoji}
-                                                variant="ghost"
-                                                className="h-10 w-10 p-0"
-                                                onClick={() => {
-                                                  setEditingPlayer({
-                                                    ...editingPlayer,
-                                                    emoji: emoji,
-                                                  })
-                                                  setShowEmojiPicker(false)
-                                                }}
-                                              >
-                                                <span className="text-xl">
-                                                  {emoji}
-                                                </span>
-                                              </Button>
-                                            ))}
-                                            <Button
-                                              variant="ghost"
-                                              className="h-10 w-10 p-0"
-                                              onClick={() => {
-                                                setEditingPlayer({
-                                                  ...editingPlayer,
-                                                  emoji: undefined,
-                                                })
-                                                setShowEmojiPicker(false)
-                                              }}
-                                            >
-                                              <span className="text-xl">
-                                                ❌
-                                              </span>
-                                            </Button>
-                                          </div>
-                                        </PopoverContent>
-                                      </Popover>
-                                    </div>
-                                  </div>
-
-                                  {/* Dealer Position Assignment */}
-                                  <div className="space-y-2">
-                                    <Label>Dealer Position</Label>
-                                    <Button
-                                      variant={
-                                        dealerSeat === editingPlayer.seatNumber
-                                          ? "default"
-                                          : "outline"
-                                      }
-                                      onClick={() =>
-                                        setDealerPosition(
-                                          editingPlayer.seatNumber
-                                        )
-                                      }
-                                      className="w-full"
-                                    >
-                                      {dealerSeat === editingPlayer.seatNumber
-                                        ? "Current Dealer"
-                                        : "Set as Dealer"}
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
-                              <DialogFooter>
-                                <DialogClose asChild>
-                                  <Button variant="outline">Cancel</Button>
-                                </DialogClose>
-                                <DialogClose asChild>
-                                  <Button
-                                    onClick={() =>
-                                      editingPlayer &&
-                                      updatePlayer(editingPlayer)
-                                    }
-                                  >
-                                    Save Changes
-                                  </Button>
-                                </DialogClose>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => removePlayer(player.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="text-center py-8 bg-muted rounded-lg">
-            <p className="text-muted-foreground">
-              No players added yet. Add players to create a seating plan.
-            </p>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={playerManager.randomizeSeats}
+            disabled={playerManager.randomizeInProgress}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Randomize Seats
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={playerManager.randomizeDealer}
+          >
+            <Award className="h-4 w-4 mr-2" />
+            Random Dealer
+          </Button>
+          <Button onClick={playerManager.addPlayer} size="sm">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add Player
+          </Button>
+        </div>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {settings.players.map((player) => {
+          const role = playerManager.getPlayerRole(player)
+          const isDealer = player.seatNumber === playerManager.dealerSeat
+          const isSmallBlind =
+            player.seatNumber === playerManager.smallBlindSeat
+          const isBigBlind = player.seatNumber === playerManager.bigBlindSeat
+
+          return (
+            <PlayerCard
+              key={player.id}
+              player={player}
+              role={role}
+              isDealer={isDealer}
+              isSmallBlind={isSmallBlind}
+              isBigBlind={isBigBlind}
+              onEditPlayer={playerManager.setEditingPlayer}
+              onRemovePlayer={playerManager.removePlayer}
+              onToggleActive={playerManager.togglePlayerActive}
+              onIncrementBuyIn={playerManager.incrementBuyIn}
+              onDecrementBuyIn={playerManager.decrementBuyIn}
+              onSetDealer={playerManager.setDealerPosition}
+              getRoleDisplayName={playerManager.getRoleDisplayName}
+            />
+          )
+        })}
+      </div>
+
+      <Dialog
+        open={!!playerManager.editingPlayer}
+        onOpenChange={(open) => !open && playerManager.setEditingPlayer(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Player</DialogTitle>
+          </DialogHeader>
+          <EditPlayerDialog
+            player={playerManager.editingPlayer}
+            onSave={playerManager.updatePlayer}
+            onCancel={() => playerManager.setEditingPlayer(null)}
+            commonEmojis={commonEmojis}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

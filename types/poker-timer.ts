@@ -25,6 +25,9 @@ export interface Settings {
   darkMode: boolean
   chipDenominations: ChipDenomination[]
   players: Player[]
+  dealerSeat: number | null
+  smallBlindSeat: number | null
+  bigBlindSeat: number | null
 }
 
 export interface Preset {

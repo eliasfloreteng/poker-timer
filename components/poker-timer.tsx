@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -9,6 +9,7 @@ import { SettingsPanel } from "@/components/settings-panel"
 import { LevelList } from "@/components/level-list"
 import { SeatingPlan } from "@/components/seating-plan"
 import { useLocalStorage } from "@/hooks/use-local-storage"
+import { useTimer } from "@/hooks/use-timer"
 import type { Level, Settings } from "@/types/poker-timer"
 import { defaultLevels, defaultSettings } from "@/lib/default-data"
 import {
@@ -21,158 +22,217 @@ import {
 } from "lucide-react"
 import { ChipCalculator } from "@/components/chip-calculator"
 
+// NextLevels component to display upcoming levels
+interface NextLevelsProps {
+  levels: Level[]
+  currentLevelIndex: number
+}
+
+function NextLevels({ levels, currentLevelIndex }: NextLevelsProps) {
+  const nextLevels = levels.slice(currentLevelIndex + 1, currentLevelIndex + 4)
+
+  if (nextLevels.length === 0) {
+    return (
+      <div className="text-center py-4 text-muted-foreground">
+        This is the final level
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-6">
+      <h3 className="text-lg font-medium mb-2">Upcoming Levels</h3>
+      <div className="space-y-2">
+        {nextLevels.map((level, idx) => (
+          <div
+            key={idx}
+            className="p-3 border rounded-md flex justify-between items-center"
+          >
+            <div>
+              {level.isBreak ? (
+                <span className="font-medium">Break</span>
+              ) : (
+                <span>
+                  <span className="font-medium">
+                    Level {currentLevelIndex + idx + 2}:
+                  </span>{" "}
+                  {level.smallBlind}/{level.bigBlind}
+                  {level.ante > 0 && ` (Ante: ${level.ante})`}
+                </span>
+              )}
+            </div>
+            <div>{level.duration} min</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Timer Controls Component
+interface TimerControlsProps {
+  isRunning: boolean
+  toggleTimer: () => void
+  resetTimer: () => void
+  goToPreviousLevel: () => void
+  goToNextLevel: () => void
+  shortenLevel: () => void
+  extendLevel: () => void
+  soundEnabled: boolean
+  toggleSound: () => void
+  hasPreviousLevel: boolean
+  hasNextLevel: boolean
+}
+
+function TimerControls({
+  isRunning,
+  toggleTimer,
+  resetTimer,
+  goToPreviousLevel,
+  goToNextLevel,
+  shortenLevel,
+  extendLevel,
+  soundEnabled,
+  toggleSound,
+  hasPreviousLevel,
+  hasNextLevel,
+}: TimerControlsProps) {
+  return (
+    <div className="flex flex-wrap gap-2 justify-center">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={goToPreviousLevel}
+        disabled={!hasPreviousLevel}
+      >
+        <SkipBack className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant={isRunning ? "destructive" : "default"}
+        onClick={toggleTimer}
+      >
+        {isRunning ? (
+          <>
+            <Pause className="h-4 w-4 mr-2" /> Pause
+          </>
+        ) : (
+          <>
+            <Play className="h-4 w-4 mr-2" /> Start
+          </>
+        )}
+      </Button>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={goToNextLevel}
+        disabled={!hasNextLevel}
+      >
+        <SkipForward className="h-4 w-4" />
+      </Button>
+
+      <Button variant="outline" onClick={resetTimer}>
+        Reset
+      </Button>
+
+      <Button variant="outline" onClick={shortenLevel}>
+        -1 Min
+      </Button>
+
+      <Button variant="outline" onClick={extendLevel}>
+        +1 Min
+      </Button>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={toggleSound}
+        title={soundEnabled ? "Mute" : "Unmute"}
+      >
+        {soundEnabled ? (
+          <Volume2 className="h-4 w-4" />
+        ) : (
+          <VolumeX className="h-4 w-4" />
+        )}
+      </Button>
+    </div>
+  )
+}
+
 export function PokerTimer() {
   const [levels, setLevels] = useLocalStorage<Level[]>(
     "poker-timer-levels",
     defaultLevels
   )
+
   const [settings, setSettings] = useLocalStorage<Settings>(
     "poker-timer-settings",
     defaultSettings
   )
-  const [currentLevelIndex, setCurrentLevelIndex] = useLocalStorage<number>(
-    "poker-timer-currentLevelIndex",
-    0
-  )
-  const [timeRemaining, setTimeRemaining] = useLocalStorage<number>(
-    "poker-timer-timeRemaining",
-    levels[0]?.duration * 60 || 0
-  )
-  const [isRunning, setIsRunning] = useLocalStorage<boolean>(
-    "poker-timer-isRunning",
-    false
-  )
+
   const [activeTab, setActiveTab] = useState("timer")
+
+  // Debug the active tab
+  useEffect(() => {
+    console.log("Active tab:", activeTab)
+  }, [activeTab])
+
   const [soundEnabled, setSoundEnabled] = useLocalStorage<boolean>(
     "poker-timer-soundEnabled",
     true
   )
 
-  const currentLevel = levels[currentLevelIndex]
-
-  const playSound = useCallback(() => {
-    if (soundEnabled && settings.soundEnabled) {
-      const audio = new Audio("/notification.wav")
-      audio.play().catch((e) => console.error("Error playing sound:", e))
-    }
-  }, [soundEnabled, settings.soundEnabled])
-
-  // Initialize timer when level changes, but only if it's not already set
-  useEffect(() => {
-    if (currentLevel && timeRemaining === 0) {
-      setTimeRemaining(currentLevel.duration * 60)
-    }
-  }, [currentLevel, timeRemaining, setTimeRemaining])
-
-  // Timer logic
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
-
-    if (isRunning && timeRemaining > 0) {
-      interval = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            playSound()
-            if (currentLevelIndex < levels.length - 1) {
-              setCurrentLevelIndex((prev) => prev + 1)
-              // Don't stop the timer when advancing levels
-              return 0
-            } else {
-              setIsRunning(false)
-              return 0
-            }
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } else if (timeRemaining === 0 && currentLevelIndex === levels.length - 1) {
-      // Only stop the timer if we're on the last level and time is up
-      setIsRunning(false)
-    }
-
-    return () => {
-      if (interval) clearInterval(interval)
-    }
-  }, [
-    isRunning,
-    timeRemaining,
-    currentLevelIndex,
-    levels.length,
-    playSound,
-    setTimeRemaining,
-    setCurrentLevelIndex,
-    setIsRunning,
-  ])
+  // Use the timer hook
+  const timer = useTimer({
+    levels,
+    soundEnabled,
+    appSoundEnabled: settings.soundEnabled,
+  })
 
   const moveLevel = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= levels.length) return
-
     const newLevels = [...levels]
-    const [removed] = newLevels.splice(fromIndex, 1)
-    newLevels.splice(toIndex, 0, removed)
+    const [movedLevel] = newLevels.splice(fromIndex, 1)
+    newLevels.splice(toIndex, 0, movedLevel)
     setLevels(newLevels)
 
-    // Update current level index if needed
-    if (currentLevelIndex === fromIndex) {
-      setCurrentLevelIndex(toIndex)
+    // Update currentLevelIndex if it was affected by the move
+    if (fromIndex === timer.currentLevelIndex) {
+      timer.setCurrentLevelIndex(toIndex)
     } else if (
-      (currentLevelIndex > fromIndex && currentLevelIndex <= toIndex) ||
-      (currentLevelIndex < fromIndex && currentLevelIndex >= toIndex)
+      (fromIndex < timer.currentLevelIndex &&
+        toIndex >= timer.currentLevelIndex) ||
+      (fromIndex > timer.currentLevelIndex &&
+        toIndex <= timer.currentLevelIndex)
     ) {
-      setCurrentLevelIndex((prev) =>
-        fromIndex < toIndex ? prev - 1 : prev + 1
+      timer.setCurrentLevelIndex(
+        fromIndex < timer.currentLevelIndex
+          ? timer.currentLevelIndex - 1
+          : timer.currentLevelIndex + 1
       )
     }
   }
 
-  const toggleTimer = () => {
-    setIsRunning((prev) => !prev)
-  }
-
-  const resetTimer = () => {
-    if (currentLevel) {
-      setTimeRemaining(currentLevel.duration * 60)
-    }
-    setIsRunning(false)
-  }
-
-  const goToNextLevel = () => {
-    if (currentLevelIndex < levels.length - 1) {
-      setCurrentLevelIndex((prev) => prev + 1)
-      // Reset timer to the new level's duration
-      setTimeRemaining(levels[currentLevelIndex + 1].duration * 60)
-    }
-  }
-
-  const goToPreviousLevel = () => {
-    if (currentLevelIndex > 0) {
-      setCurrentLevelIndex((prev) => prev - 1)
-      // Reset timer to the new level's duration
-      setTimeRemaining(levels[currentLevelIndex - 1].duration * 60)
-    }
-  }
-
-  const shortenLevel = () => {
-    if (timeRemaining > 60) {
-      setTimeRemaining((prev) => prev - 60)
-    } else {
-      setTimeRemaining(0)
-    }
-  }
-
-  const extendLevel = () => {
-    setTimeRemaining((prev) => prev + 60)
-  }
-
   const updateLevels = (newLevels: Level[]) => {
     setLevels(newLevels)
-    setCurrentLevelIndex(0)
-    setTimeRemaining(newLevels[0]?.duration * 60 || 0)
-    setIsRunning(false)
+
+    // Ensure currentLevelIndex is still valid
+    if (timer.currentLevelIndex >= newLevels.length) {
+      timer.setCurrentLevelIndex(Math.max(0, newLevels.length - 1))
+    }
+
+    // Update the timer if the current level changed
+    if (timer.currentLevelIndex < newLevels.length) {
+      timer.setTimeRemaining(newLevels[timer.currentLevelIndex].duration * 60)
+    }
+  }
+
+  const toggleSound = () => {
+    setSoundEnabled((prev) => !prev)
   }
 
   return (
-    <div className="container mx-auto py-6 max-w-4xl">
+    <div className="container mx-auto py-8 px-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-5 mb-6">
           <TabsTrigger value="timer">Timer</TabsTrigger>
@@ -182,107 +242,37 @@ export function PokerTimer() {
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="timer" className="space-y-4">
+        <TabsContent value="timer">
           <Card>
             <CardContent className="pt-6">
-              <TimerDisplay
-                level={currentLevel}
-                timeRemaining={timeRemaining}
-                currentLevelIndex={currentLevelIndex}
-                totalLevels={levels.length}
-                chipDenominations={settings.chipDenominations}
-              />
+              <div className="space-y-6">
+                <TimerDisplay
+                  level={timer.currentLevel}
+                  timeRemaining={timer.timeRemaining}
+                  isRunning={timer.isRunning}
+                />
 
-              <div className="flex flex-wrap justify-center gap-2 mt-6">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={goToPreviousLevel}
-                  disabled={currentLevelIndex === 0}
-                >
-                  <SkipBack className="h-4 w-4" />
-                </Button>
+                <TimerControls
+                  isRunning={timer.isRunning}
+                  toggleTimer={timer.toggleTimer}
+                  resetTimer={timer.resetTimer}
+                  goToPreviousLevel={timer.goToPreviousLevel}
+                  goToNextLevel={timer.goToNextLevel}
+                  shortenLevel={timer.shortenLevel}
+                  extendLevel={timer.extendLevel}
+                  soundEnabled={soundEnabled}
+                  toggleSound={toggleSound}
+                  hasPreviousLevel={timer.currentLevelIndex > 0}
+                  hasNextLevel={timer.currentLevelIndex < levels.length - 1}
+                />
 
-                <Button
-                  variant={isRunning ? "destructive" : "default"}
-                  size="lg"
-                  onClick={toggleTimer}
-                >
-                  {isRunning ? (
-                    <>
-                      <Pause className="h-4 w-4 mr-2" /> Pause
-                    </>
-                  ) : (
-                    <>
-                      <Play className="h-4 w-4 mr-2" /> Start
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={goToNextLevel}
-                  disabled={currentLevelIndex === levels.length - 1}
-                >
-                  <SkipForward className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setSoundEnabled((prev) => !prev)}
-                >
-                  {soundEnabled ? (
-                    <Volume2 className="h-4 w-4" />
-                  ) : (
-                    <VolumeX className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-
-              <div className="mt-4 flex justify-center gap-2">
-                <Button variant="outline" size="sm" onClick={shortenLevel}>
-                  -1 Min
-                </Button>
-                <Button variant="outline" size="sm" onClick={resetTimer}>
-                  Reset
-                </Button>
-                <Button variant="outline" size="sm" onClick={extendLevel}>
-                  +1 Min
-                </Button>
+                <NextLevels
+                  levels={levels}
+                  currentLevelIndex={timer.currentLevelIndex}
+                />
               </div>
             </CardContent>
           </Card>
-
-          <div className="mt-4">
-            <h3 className="text-lg font-medium mb-2">Next Levels</h3>
-            <div className="space-y-2">
-              {levels
-                .slice(currentLevelIndex + 1, currentLevelIndex + 4)
-                .map((level, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 border rounded-md flex justify-between items-center"
-                  >
-                    <div>
-                      {level.isBreak ? (
-                        <span className="font-medium">Break</span>
-                      ) : (
-                        <span>
-                          <span className="font-medium">
-                            Level {currentLevelIndex + idx + 2}:
-                          </span>{" "}
-                          {level.smallBlind}/{level.bigBlind}
-                          {level.ante > 0 && ` (Ante: ${level.ante})`}
-                        </span>
-                      )}
-                    </div>
-                    <div>{level.duration} min</div>
-                  </div>
-                ))}
-            </div>
-          </div>
         </TabsContent>
 
         <TabsContent value="levels">
@@ -290,26 +280,29 @@ export function PokerTimer() {
             <CardContent className="pt-6">
               <LevelList
                 levels={levels}
-                currentLevelIndex={currentLevelIndex}
+                currentLevelIndex={timer.currentLevelIndex}
                 onUpdateLevel={(level, index) => {
                   const newLevels = [...levels]
                   newLevels[index] = level
                   setLevels(newLevels)
-                  if (index === currentLevelIndex) {
-                    setTimeRemaining(level.duration * 60)
+                  if (index === timer.currentLevelIndex) {
+                    timer.setTimeRemaining(level.duration * 60)
                   }
                 }}
                 onAddLevel={(level) => setLevels([...levels, level])}
                 onRemoveLevel={(index) => {
                   const newLevels = levels.filter((_, i) => i !== index)
                   setLevels(newLevels)
-                  if (index <= currentLevelIndex && currentLevelIndex > 0) {
-                    setCurrentLevelIndex((prev) => prev - 1)
+                  if (
+                    index <= timer.currentLevelIndex &&
+                    timer.currentLevelIndex > 0
+                  ) {
+                    timer.setCurrentLevelIndex(timer.currentLevelIndex - 1)
                   }
                 }}
                 onMoveLevel={moveLevel}
                 onSelectLevel={(index) => {
-                  setCurrentLevelIndex(index)
+                  timer.setCurrentLevelIndex(index)
                   setActiveTab("timer")
                 }}
                 onUpdateLevels={updateLevels}
@@ -349,9 +342,9 @@ export function PokerTimer() {
                     // Reset all settings and state
                     setLevels(defaultLevels)
                     setSettings(defaultSettings)
-                    setCurrentLevelIndex(0)
-                    setTimeRemaining(defaultLevels[0].duration * 60)
-                    setIsRunning(false)
+                    timer.setCurrentLevelIndex(0)
+                    timer.setTimeRemaining(defaultLevels[0].duration * 60)
+                    timer.setIsRunning(false)
                     // Reload the application
                     window.location.reload()
                   }

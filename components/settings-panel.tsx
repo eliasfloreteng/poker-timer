@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Settings } from "@/types/poker-timer"
-import { Undo2, Volume2, Moon, Plus, X, Palette } from "lucide-react"
+import { Undo2, Volume2, Moon, Plus, X, Palette, Sun } from "lucide-react"
 import { ChipIcon } from "@/components/ui/chip-icon"
 import { ColorPicker } from "@/components/ui/color-picker"
 import {
@@ -112,7 +112,11 @@ export function SettingsPanel({
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Moon className="h-4 w-4" />
+              {settings.darkMode ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
               <Label htmlFor="darkMode">Dark Mode</Label>
             </div>
             <Switch
@@ -120,12 +124,6 @@ export function SettingsPanel({
               checked={settings.darkMode}
               onCheckedChange={() => {
                 handleToggle("darkMode")
-                // Toggle dark mode class on document
-                if (!settings.darkMode) {
-                  document.documentElement.classList.add("dark")
-                } else {
-                  document.documentElement.classList.remove("dark")
-                }
               }}
             />
           </div>

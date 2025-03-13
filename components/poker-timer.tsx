@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,6 +9,7 @@ import { LevelList } from "@/components/level-list"
 import { SeatingPlan } from "@/components/seating-plan"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { useTimer } from "@/hooks/use-timer"
+import { useThemeSync } from "@/hooks/use-theme"
 import type { Level, Settings } from "@/types/poker-timer"
 import { defaultLevels, defaultSettings } from "@/lib/default-data"
 import {
@@ -171,12 +171,10 @@ export function PokerTimer() {
     defaultSettings
   )
 
-  const [activeTab, setActiveTab] = useState("timer")
-
-  // Debug the active tab
-  useEffect(() => {
-    console.log("Active tab:", activeTab)
-  }, [activeTab])
+  const [activeTab, setActiveTab] = useLocalStorage<string>(
+    "poker-timer-active-tab",
+    "timer"
+  )
 
   const [soundEnabled, setSoundEnabled] = useLocalStorage<boolean>(
     "poker-timer-soundEnabled",
@@ -230,6 +228,9 @@ export function PokerTimer() {
   const toggleSound = () => {
     setSoundEnabled((prev) => !prev)
   }
+
+  // Sync dark mode with next-themes
+  useThemeSync(settings, setSettings)
 
   return (
     <div className="container mx-auto py-4 md:py-8 px-2 md:px-4">

@@ -320,11 +320,7 @@ export function PokerTimer() {
         </TabsContent>
 
         <TabsContent value="chips">
-          <Card>
-            <CardContent className="pt-6">
-              <ChipCalculator chipDenominations={settings.chipDenominations} />
-            </CardContent>
-          </Card>
+          <ChipCalculator chipDenominations={settings.chipDenominations} />
         </TabsContent>
 
         <TabsContent value="settings">

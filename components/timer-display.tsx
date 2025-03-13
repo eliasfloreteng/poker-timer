@@ -26,20 +26,20 @@ export function TimerDisplay({
       </div>
 
       <div
-        className={`text-7xl font-bold mb-4 ${
+        className={`text-5xl md:text-7xl font-bold mb-2 md:mb-4 ${
           isWarning ? "text-red-500 animate-pulse" : ""
         }`}
       >
         {formatTime(timeRemaining)}
       </div>
 
-      <Progress value={progress} className="w-full h-2 mb-6" />
+      <Progress value={progress} className="w-full h-2 mb-4 md:mb-6" />
 
       {level.isBreak ? (
         <div className="text-xl font-medium">Break Time!</div>
       ) : (
         <div className="flex flex-col items-center gap-2">
-          <div className="text-2xl font-medium">
+          <div className="text-xl md:text-2xl font-medium">
             {level.smallBlind}/{level.bigBlind}
             {level.ante > 0 && ` + ${level.ante}`}
           </div>

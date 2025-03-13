@@ -40,13 +40,13 @@ function NextLevels({ levels, currentLevelIndex }: NextLevelsProps) {
   }
 
   return (
-    <div className="mt-6">
-      <h3 className="text-lg font-medium mb-2">Upcoming Levels</h3>
+    <div className="mt-4 md:mt-6">
+      <h3 className="text-base md:text-lg font-medium mb-2">Upcoming Levels</h3>
       <div className="space-y-2">
         {nextLevels.map((level, idx) => (
           <div
             key={idx}
-            className="p-3 border rounded-md flex justify-between items-center"
+            className="p-2 sm:p-3 border rounded-md flex justify-between items-center text-sm sm:text-base"
           >
             <div>
               {level.isBreak ? (
@@ -98,7 +98,7 @@ function TimerControls({
   hasNextLevel,
 }: TimerControlsProps) {
   return (
-    <div className="flex flex-wrap gap-2 justify-center">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
       <Button
         variant="outline"
         size="icon"
@@ -232,19 +232,21 @@ export function PokerTimer() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto py-4 md:py-8 px-2 md:px-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 mb-6">
-          <TabsTrigger value="timer">Timer</TabsTrigger>
-          <TabsTrigger value="levels">Levels</TabsTrigger>
-          <TabsTrigger value="players">Players</TabsTrigger>
-          <TabsTrigger value="chips">Chips</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2 block sm:flex justify-center items-center">
+          <TabsList className="inline-flex w-auto sm:min-w-0 min-w-full mb-4 md:mb-6 gap-1">
+            <TabsTrigger value="timer">Timer</TabsTrigger>
+            <TabsTrigger value="levels">Levels</TabsTrigger>
+            <TabsTrigger value="players">Players</TabsTrigger>
+            <TabsTrigger value="chips">Chips</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="timer">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 md:pt-6">
               <div className="space-y-6">
                 <TimerDisplay
                   level={timer.currentLevel}
@@ -277,7 +279,7 @@ export function PokerTimer() {
 
         <TabsContent value="levels">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 md:pt-6">
               <LevelList
                 levels={levels}
                 currentLevelIndex={timer.currentLevelIndex}

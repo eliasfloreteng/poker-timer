@@ -627,7 +627,7 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold mb-1">Seating Plan</h2>
           <p className="text-muted-foreground">
@@ -635,12 +635,13 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={playerManager.randomizeSeats}
             disabled={playerManager.randomizeInProgress}
+            className="flex-1 sm:flex-initial"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Randomize Seats
@@ -649,11 +650,16 @@ export function SeatingPlan({ settings, onUpdateSettings }: SeatingPlanProps) {
             variant="outline"
             size="sm"
             onClick={playerManager.randomizeDealer}
+            className="flex-1 sm:flex-initial"
           >
             <Award className="h-4 w-4 mr-2" />
             Random Dealer
           </Button>
-          <Button onClick={playerManager.addPlayer} size="sm">
+          <Button
+            onClick={playerManager.addPlayer}
+            size="sm"
+            className="flex-1 sm:flex-initial"
+          >
             <UserPlus className="h-4 w-4 mr-2" />
             Add Player
           </Button>

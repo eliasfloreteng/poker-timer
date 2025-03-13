@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -45,23 +45,23 @@ export function ChipCalculator({
 
   // Update chips when denominations change
   useEffect(() => {
-    setChips((currentChips) => {
-      // Keep existing counts when possible, set to 0 for new denominations
-      const newChips = chipDenominations.map((denomination) => {
-        const existingChip = currentChips.find(
-          (chip) => chip.denomination.value === denomination.value
-        )
-        return existingChip || { denomination, count: 0 }
-      })
-
-      // Only update if the structure has changed
-      const hasChanged =
-        JSON.stringify(newChips.map((c) => c.denomination.value)) !==
-        JSON.stringify(currentChips.map((c) => c.denomination.value))
-
-      return hasChanged ? newChips : currentChips
+    // Keep existing counts when possible, set to 0 for new denominations
+    const newChips = chipDenominations.map((denomination) => {
+      const existingChip = chips.find(
+        (chip) => chip.denomination.value === denomination.value
+      )
+      return existingChip || { denomination, count: 0 }
     })
-  }, [chipDenominations, setChips])
+
+    // Only update if the structure has changed
+    const hasChanged =
+      JSON.stringify(newChips.map((c) => c.denomination.value)) !==
+      JSON.stringify(chips.map((c) => c.denomination.value))
+
+    if (hasChanged) {
+      setChips(newChips)
+    }
+  }, [chipDenominations, chips, setChips])
 
   // Calculate total value
   const totalValue = chips.reduce(
@@ -71,9 +71,7 @@ export function ChipCalculator({
 
   // Reset all chip counts to zero
   const resetChips = () => {
-    setChips((currentChips) =>
-      currentChips.map((chip) => ({ ...chip, count: 0 }))
-    )
+    setChips(chips.map((chip) => ({ ...chip, count: 0 })))
   }
 
   // Handle chip count change
@@ -82,8 +80,8 @@ export function ChipCalculator({
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const newCount = parseInt(e.target.value) || 0
-    setChips((currentChips) =>
-      currentChips.map((chip, i) =>
+    setChips(
+      chips.map((chip, i) =>
         i === index ? { ...chip, count: newCount } : chip
       )
     )

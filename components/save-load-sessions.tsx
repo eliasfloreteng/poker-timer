@@ -48,14 +48,12 @@ export function SaveLoadSessions({
     "poker-session-password",
     ""
   )
-  const [savedKey, setSavedKey] = useLocalStorage<string>(
-    "poker-session-key",
-    ""
-  )
+
+  // Fixed key for all users - no need to enter this
+  const STORAGE_KEY = "poker-sessions-app"
 
   // Save dialog state
   const [showSaveDialog, setShowSaveDialog] = useState(false)
-  const [saveKey, setSaveKey] = useState(savedKey)
   const [savePassword, setSavePassword] = useState(savedPassword)
   const [isSaving, setIsSaving] = useState(false)
   const [saveResult, setSaveResult] = useState<{
@@ -65,7 +63,6 @@ export function SaveLoadSessions({
 
   // Load dialog state
   const [showLoadDialog, setShowLoadDialog] = useState(false)
-  const [loadKey, setLoadKey] = useState(savedKey)
   const [loadPassword, setLoadPassword] = useState(savedPassword)
   const [isLoading, setIsLoading] = useState(false)
   const [loadResult, setLoadResult] = useState<{
@@ -76,16 +73,14 @@ export function SaveLoadSessions({
   // Password dialog state
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [newPassword, setNewPassword] = useState(savedPassword)
-  const [newKey, setNewKey] = useState(savedKey)
 
   const handleSave = async () => {
-    const keyToUse = saveKey.trim() || savedKey
     const passwordToUse = savePassword.trim() || savedPassword
 
-    if (!keyToUse || !passwordToUse) {
+    if (!passwordToUse) {
       setSaveResult({
         success: false,
-        message: "Please enter both a key and password",
+        message: "Please enter a password",
       })
       return
     }
@@ -95,7 +90,7 @@ export function SaveLoadSessions({
 
     try {
       const response = await saveData({
-        key: keyToUse,
+        key: STORAGE_KEY,
         password: passwordToUse,
         data: {
           players,
@@ -105,16 +100,15 @@ export function SaveLoadSessions({
       })
 
       if (response.success) {
-        // Save the credentials for future use
-        setSavedKey(keyToUse)
+        // Save the password for future use
         setSavedPassword(passwordToUse)
         setSaveResult({
           success: true,
           message: "Sessions saved successfully!",
         })
 
-        // Close dialog after success if using saved credentials
-        if (savedKey && savedPassword) {
+        // Close dialog after success if using saved password
+        if (savedPassword) {
           setTimeout(() => {
             setShowSaveDialog(false)
             setSaveResult(null)
@@ -137,13 +131,12 @@ export function SaveLoadSessions({
   }
 
   const handleLoad = async () => {
-    const keyToUse = loadKey.trim() || savedKey
     const passwordToUse = loadPassword.trim() || savedPassword
 
-    if (!keyToUse || !passwordToUse) {
+    if (!passwordToUse) {
       setLoadResult({
         success: false,
-        message: "Please enter both a key and password",
+        message: "Please enter a password",
       })
       return
     }
@@ -153,7 +146,7 @@ export function SaveLoadSessions({
 
     try {
       const response = await getData({
-        key: keyToUse,
+        key: STORAGE_KEY,
         password: passwordToUse,
       })
 
@@ -162,8 +155,7 @@ export function SaveLoadSessions({
           response.data
 
         if (loadedPlayers && loadedSessions) {
-          // Save the credentials for future use
-          setSavedKey(keyToUse)
+          // Save the password for future use
           setSavedPassword(passwordToUse)
 
           // Load the data
@@ -203,19 +195,16 @@ export function SaveLoadSessions({
 
   const handlePasswordChange = () => {
     setSavedPassword(newPassword)
-    setSavedKey(newKey)
     setShowPasswordDialog(false)
 
-    // Update the save/load forms with new credentials
+    // Update the save/load forms with new password
     setSavePassword(newPassword)
-    setSaveKey(newKey)
     setLoadPassword(newPassword)
-    setLoadKey(newKey)
   }
 
-  // Quick save using saved credentials
+  // Quick save using saved password
   const handleQuickSave = async () => {
-    if (!savedKey || !savedPassword) {
+    if (!savedPassword) {
       setShowSaveDialog(true)
       return
     }
@@ -223,7 +212,7 @@ export function SaveLoadSessions({
     setIsSaving(true)
     try {
       const response = await saveData({
-        key: savedKey,
+        key: STORAGE_KEY,
         password: savedPassword,
         data: {
           players,
@@ -245,9 +234,9 @@ export function SaveLoadSessions({
     }
   }
 
-  // Quick load using saved credentials
+  // Quick load using saved password
   const handleQuickLoad = async () => {
-    if (!savedKey || !savedPassword) {
+    if (!savedPassword) {
       setShowLoadDialog(true)
       return
     }
@@ -255,7 +244,7 @@ export function SaveLoadSessions({
     setIsLoading(true)
     try {
       const response = await getData({
-        key: savedKey,
+        key: STORAGE_KEY,
         password: savedPassword,
       })
 
@@ -361,7 +350,7 @@ export function SaveLoadSessions({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            {savedKey && savedPassword ? (
+            {savedPassword ? (
               <Button
                 onClick={handleQuickSave}
                 disabled={isSaving}
@@ -387,15 +376,6 @@ export function SaveLoadSessions({
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="save-key">Storage Key</Label>
-                      <Input
-                        id="save-key"
-                        placeholder="Enter a unique key for your data"
-                        value={saveKey}
-                        onChange={(e) => setSaveKey(e.target.value)}
-                      />
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="save-password">Password</Label>
                       <Input
@@ -436,7 +416,7 @@ export function SaveLoadSessions({
               </Dialog>
             )}
 
-            {savedKey && savedPassword ? (
+            {savedPassword ? (
               <Button
                 onClick={handleQuickLoad}
                 disabled={isLoading}
@@ -463,15 +443,6 @@ export function SaveLoadSessions({
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="load-key">Storage Key</Label>
-                      <Input
-                        id="load-key"
-                        placeholder="Enter the key for your saved data"
-                        value={loadKey}
-                        onChange={(e) => setLoadKey(e.target.value)}
-                      />
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="load-password">Password</Label>
                       <Input
@@ -519,27 +490,17 @@ export function SaveLoadSessions({
               <DialogTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   <Key className="h-4 w-4" />
-                  Change Credentials
+                  Change Password
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Change Cloud Credentials</DialogTitle>
+                  <DialogTitle>Change Cloud Password</DialogTitle>
                   <DialogDescription>
-                    Update your storage key and password for cloud save/load
-                    operations.
+                    Update your password for cloud save/load operations.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-key">Storage Key</Label>
-                    <Input
-                      id="new-key"
-                      placeholder="Enter your storage key"
-                      value={newKey}
-                      onChange={(e) => setNewKey(e.target.value)}
-                    />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="new-password">Password</Label>
                     <Input
@@ -552,7 +513,7 @@ export function SaveLoadSessions({
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={handlePasswordChange}>
-                      Save Credentials
+                      Save Password
                     </Button>
                     <Button
                       variant="outline"
@@ -565,12 +526,6 @@ export function SaveLoadSessions({
               </DialogContent>
             </Dialog>
           </div>
-
-          {savedKey && (
-            <div className="text-sm text-muted-foreground">
-              Current storage key: <code className="font-mono">{savedKey}</code>
-            </div>
-          )}
         </CardContent>
       </Card>
 

@@ -228,7 +228,10 @@ function SessionCard({ session, onDelete }: SessionCardProps) {
 export function SessionList({ sessions, onDeleteSession }: SessionListProps) {
   // Sort sessions by date (most recent first)
   const sortedSessions = [...sessions].sort((a, b) => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime()
+    // Parse the date strings (format: "January 1st, 2024")
+    const dateA = new Date(a.date.replace(/(\d+)(st|nd|rd|th)/, "$1"))
+    const dateB = new Date(b.date.replace(/(\d+)(st|nd|rd|th)/, "$1"))
+    return dateB.getTime() - dateA.getTime()
   })
 
   if (sessions.length === 0) {

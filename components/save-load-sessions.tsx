@@ -23,7 +23,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { saveData, getData } from "@/lib/api-service"
 import type { PokerPlayer, PokerSession } from "@/types/poker-timer"
-import { Save, Download, Key, AlertCircle, CheckCircle } from "lucide-react"
+import {
+  Save,
+  Download,
+  Key,
+  AlertCircle,
+  CheckCircle,
+  FileDown,
+  FileUp,
+} from "lucide-react"
 
 interface SaveLoadSessionsProps {
   players: PokerPlayer[]
@@ -71,7 +79,10 @@ export function SaveLoadSessions({
   const [newKey, setNewKey] = useState(savedKey)
 
   const handleSave = async () => {
-    if (!saveKey.trim() || !savePassword.trim()) {
+    const keyToUse = saveKey.trim() || savedKey
+    const passwordToUse = savePassword.trim() || savedPassword
+
+    if (!keyToUse || !passwordToUse) {
       setSaveResult({
         success: false,
         message: "Please enter both a key and password",
@@ -84,8 +95,8 @@ export function SaveLoadSessions({
 
     try {
       const response = await saveData({
-        key: saveKey.trim(),
-        password: savePassword.trim(),
+        key: keyToUse,
+        password: passwordToUse,
         data: {
           players,
           sessions,
@@ -95,12 +106,20 @@ export function SaveLoadSessions({
 
       if (response.success) {
         // Save the credentials for future use
-        setSavedKey(saveKey.trim())
-        setSavedPassword(savePassword.trim())
+        setSavedKey(keyToUse)
+        setSavedPassword(passwordToUse)
         setSaveResult({
           success: true,
           message: "Sessions saved successfully!",
         })
+
+        // Close dialog after success if using saved credentials
+        if (savedKey && savedPassword) {
+          setTimeout(() => {
+            setShowSaveDialog(false)
+            setSaveResult(null)
+          }, 2000)
+        }
       } else {
         setSaveResult({
           success: false,
@@ -118,7 +137,10 @@ export function SaveLoadSessions({
   }
 
   const handleLoad = async () => {
-    if (!loadKey.trim() || !loadPassword.trim()) {
+    const keyToUse = loadKey.trim() || savedKey
+    const passwordToUse = loadPassword.trim() || savedPassword
+
+    if (!keyToUse || !passwordToUse) {
       setLoadResult({
         success: false,
         message: "Please enter both a key and password",
@@ -131,8 +153,8 @@ export function SaveLoadSessions({
 
     try {
       const response = await getData({
-        key: loadKey.trim(),
-        password: loadPassword.trim(),
+        key: keyToUse,
+        password: passwordToUse,
       })
 
       if (response.success && response.data) {
@@ -141,8 +163,8 @@ export function SaveLoadSessions({
 
         if (loadedPlayers && loadedSessions) {
           // Save the credentials for future use
-          setSavedKey(loadKey.trim())
-          setSavedPassword(loadPassword.trim())
+          setSavedKey(keyToUse)
+          setSavedPassword(passwordToUse)
 
           // Load the data
           onLoadData(loadedPlayers, loadedSessions)
@@ -191,6 +213,74 @@ export function SaveLoadSessions({
     setLoadKey(newKey)
   }
 
+  // Quick save using saved credentials
+  const handleQuickSave = async () => {
+    if (!savedKey || !savedPassword) {
+      setShowSaveDialog(true)
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const response = await saveData({
+        key: savedKey,
+        password: savedPassword,
+        data: {
+          players,
+          sessions,
+          timestamp: new Date().toISOString(),
+        },
+      })
+
+      if (response.success) {
+        // Show a temporary success message (could be a toast in a real app)
+        alert("Sessions saved successfully!")
+      } else {
+        alert(`Save failed: ${response.message || "Unknown error"}`)
+      }
+    } catch (error) {
+      alert("Network error occurred while saving")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Quick load using saved credentials
+  const handleQuickLoad = async () => {
+    if (!savedKey || !savedPassword) {
+      setShowLoadDialog(true)
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await getData({
+        key: savedKey,
+        password: savedPassword,
+      })
+
+      if (response.success && response.data) {
+        const { players: loadedPlayers, sessions: loadedSessions } =
+          response.data
+
+        if (loadedPlayers && loadedSessions) {
+          onLoadData(loadedPlayers, loadedSessions)
+          alert(
+            `Successfully loaded ${loadedPlayers.length} players and ${loadedSessions.length} sessions!`
+          )
+        } else {
+          alert("Invalid data format in saved sessions")
+        }
+      } else {
+        alert(`Load failed: ${response.message || "Unknown error"}`)
+      }
+    } catch (error) {
+      alert("Network error occurred while loading")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const totalSessions = sessions.length
   const totalPlayers = players.length
 
@@ -210,129 +300,156 @@ export function SaveLoadSessions({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Save className="h-4 w-4" />
-                  Save to Cloud
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Save Sessions to Cloud</DialogTitle>
-                  <DialogDescription>
-                    Save your current players and sessions to the cloud for
-                    backup or sharing across devices.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="save-key">Storage Key</Label>
-                    <Input
-                      id="save-key"
-                      placeholder="Enter a unique key for your data"
-                      value={saveKey}
-                      onChange={(e) => setSaveKey(e.target.value)}
-                    />
+            {savedKey && savedPassword ? (
+              <Button
+                onClick={handleQuickSave}
+                disabled={isSaving}
+                className="flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {isSaving ? "Saving..." : "Save to Cloud"}
+              </Button>
+            ) : (
+              <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    Save to Cloud
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Sessions to Cloud</DialogTitle>
+                    <DialogDescription>
+                      Save your current players and sessions to the cloud for
+                      backup or sharing across devices.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="save-key">Storage Key</Label>
+                      <Input
+                        id="save-key"
+                        placeholder="Enter a unique key for your data"
+                        value={saveKey}
+                        onChange={(e) => setSaveKey(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="save-password">Password</Label>
+                      <Input
+                        id="save-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={savePassword}
+                        onChange={(e) => setSavePassword(e.target.value)}
+                      />
+                    </div>
+                    {saveResult && (
+                      <Alert
+                        variant={saveResult.success ? "default" : "destructive"}
+                      >
+                        {saveResult.success ? (
+                          <CheckCircle className="h-4 w-4" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4" />
+                        )}
+                        <AlertDescription>
+                          {saveResult.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <div className="flex gap-2">
+                      <Button onClick={handleSave} disabled={isSaving}>
+                        {isSaving ? "Saving..." : "Save"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowSaveDialog(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="save-password">Password</Label>
-                    <Input
-                      id="save-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={savePassword}
-                      onChange={(e) => setSavePassword(e.target.value)}
-                    />
-                  </div>
-                  {saveResult && (
-                    <Alert
-                      variant={saveResult.success ? "default" : "destructive"}
-                    >
-                      {saveResult.success ? (
-                        <CheckCircle className="h-4 w-4" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4" />
-                      )}
-                      <AlertDescription>{saveResult.message}</AlertDescription>
-                    </Alert>
-                  )}
-                  <div className="flex gap-2">
-                    <Button onClick={handleSave} disabled={isSaving}>
-                      {isSaving ? "Saving..." : "Save"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowSaveDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )}
 
-            <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  Load from Cloud
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Load Sessions from Cloud</DialogTitle>
-                  <DialogDescription>
-                    Load previously saved players and sessions from the cloud.
-                    This will replace your current data.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="load-key">Storage Key</Label>
-                    <Input
-                      id="load-key"
-                      placeholder="Enter the key for your saved data"
-                      value={loadKey}
-                      onChange={(e) => setLoadKey(e.target.value)}
-                    />
+            {savedKey && savedPassword ? (
+              <Button
+                onClick={handleQuickLoad}
+                disabled={isLoading}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                {isLoading ? "Loading..." : "Load from Cloud"}
+              </Button>
+            ) : (
+              <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Load from Cloud
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Load Sessions from Cloud</DialogTitle>
+                    <DialogDescription>
+                      Load previously saved players and sessions from the cloud.
+                      This will replace your current data.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="load-key">Storage Key</Label>
+                      <Input
+                        id="load-key"
+                        placeholder="Enter the key for your saved data"
+                        value={loadKey}
+                        onChange={(e) => setLoadKey(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="load-password">Password</Label>
+                      <Input
+                        id="load-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={loadPassword}
+                        onChange={(e) => setLoadPassword(e.target.value)}
+                      />
+                    </div>
+                    {loadResult && (
+                      <Alert
+                        variant={loadResult.success ? "default" : "destructive"}
+                      >
+                        {loadResult.success ? (
+                          <CheckCircle className="h-4 w-4" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4" />
+                        )}
+                        <AlertDescription>
+                          {loadResult.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <div className="flex gap-2">
+                      <Button onClick={handleLoad} disabled={isLoading}>
+                        {isLoading ? "Loading..." : "Load"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowLoadDialog(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="load-password">Password</Label>
-                    <Input
-                      id="load-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={loadPassword}
-                      onChange={(e) => setLoadPassword(e.target.value)}
-                    />
-                  </div>
-                  {loadResult && (
-                    <Alert
-                      variant={loadResult.success ? "default" : "destructive"}
-                    >
-                      {loadResult.success ? (
-                        <CheckCircle className="h-4 w-4" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4" />
-                      )}
-                      <AlertDescription>{loadResult.message}</AlertDescription>
-                    </Alert>
-                  )}
-                  <div className="flex gap-2">
-                    <Button onClick={handleLoad} disabled={isLoading}>
-                      {isLoading ? "Loading..." : "Load"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowLoadDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )}
 
             <Dialog
               open={showPasswordDialog}

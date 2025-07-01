@@ -8,6 +8,7 @@ import { PlayerProfiles } from "./player-profiles"
 import { SessionForm } from "./session-form"
 import { SessionList } from "./session-list"
 import { Leaderboard } from "./leaderboard"
+import { SaveLoadSessions } from "@/components/save-load-sessions"
 import { updatePlayerAfterSession } from "@/lib/debt-utils"
 
 export function DebtTracker() {
@@ -82,6 +83,14 @@ export function DebtTracker() {
     [sessions, setSessions, setPlayers]
   )
 
+  const handleLoadData = useCallback(
+    (loadedPlayers: PokerPlayer[], loadedSessions: PokerSession[]) => {
+      setPlayers(loadedPlayers)
+      setSessions(loadedSessions)
+    },
+    [setPlayers, setSessions]
+  )
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -99,6 +108,7 @@ export function DebtTracker() {
             <TabsTrigger value="add-session">Add Session</TabsTrigger>
             <TabsTrigger value="sessions">Sessions</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="save-load">Save/Load</TabsTrigger>
           </TabsList>
         </div>
 
@@ -119,6 +129,14 @@ export function DebtTracker() {
 
         <TabsContent value="leaderboard">
           <Leaderboard players={players} sessions={sessions} />
+        </TabsContent>
+
+        <TabsContent value="save-load">
+          <SaveLoadSessions
+            players={players}
+            sessions={sessions}
+            onLoadData={handleLoadData}
+          />
         </TabsContent>
       </Tabs>
     </div>

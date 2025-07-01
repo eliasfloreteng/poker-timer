@@ -59,6 +59,7 @@ export interface SessionEntry {
 export interface PokerSession {
   id: string
   date: string
+  type: "cash" | "tournament" // Session type
   players: SessionEntry[]
   totalCashOnTable: number // Auto-calculated
   validated: boolean // Ensures cash-outs match total cash

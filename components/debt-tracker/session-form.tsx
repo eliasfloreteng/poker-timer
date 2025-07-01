@@ -11,6 +11,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -52,6 +59,7 @@ interface PlayerSessionData {
 
 export function SessionForm({ players, onAddSession }: SessionFormProps) {
   const [date, setDate] = useState<Date>(new Date())
+  const [sessionType, setSessionType] = useState<"cash" | "tournament">("cash")
   const [playerData, setPlayerData] = useState<PlayerSessionData[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -161,6 +169,7 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
       const newSession: PokerSession = {
         id: nanoid(),
         date: format(date, "MMMM do, yyyy"),
+        type: sessionType,
         players: sessionEntries,
         totalCashOnTable,
         validated: true,
@@ -178,6 +187,7 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
         }))
       )
       setDate(new Date())
+      setSessionType("cash")
     } finally {
       setIsSubmitting(false)
     }
@@ -206,25 +216,45 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Date Selection */}
-            <div className="space-y-2">
-              <Label>Session Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(date, "MMMM do, yyyy")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(newDate) => newDate && setDate(newDate)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+            {/* Date and Session Type Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Session Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(date, "MMMM do, yyyy")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={(newDate) => newDate && setDate(newDate)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Session Type</Label>
+                <Select
+                  value={sessionType}
+                  onValueChange={(value: "cash" | "tournament") =>
+                    setSessionType(value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select session type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash Game</SelectItem>
+                    <SelectItem value="tournament">Tournament</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Player Selection and Buy-ins */}

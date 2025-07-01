@@ -20,7 +20,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { ChevronDown, ChevronRight, Trash2, Calendar } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronRight,
+  Trash2,
+  Calendar,
+  Coins,
+  Trophy,
+} from "lucide-react"
 import type { PokerSession } from "@/types/poker-timer"
 import { formatSEK } from "@/lib/debt-utils"
 
@@ -63,9 +70,15 @@ function SessionCard({ session, onDelete }: SessionCardProps) {
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     {session.date}
+                    {session.type === "tournament" ? (
+                      <Trophy className="h-4 w-4 text-yellow-600" />
+                    ) : (
+                      <Coins className="h-4 w-4 text-green-600" />
+                    )}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {session.players.length} players •{" "}
+                    {session.type === "tournament" ? "Tournament" : "Cash Game"}{" "}
+                    • {session.players.length} players •{" "}
                     {formatSEK(session.totalCashOnTable)} total
                   </p>
                 </div>

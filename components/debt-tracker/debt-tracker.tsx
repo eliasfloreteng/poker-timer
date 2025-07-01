@@ -9,6 +9,7 @@ import { SessionForm } from "./session-form"
 import { SessionList } from "./session-list"
 import { Leaderboard } from "./leaderboard"
 import { SaveLoadSessions } from "@/components/save-load-sessions"
+import { QuickSaveLoad } from "@/components/quick-save-load"
 import { updatePlayerAfterSession } from "@/lib/debt-utils"
 
 export function DebtTracker() {
@@ -102,7 +103,7 @@ export function DebtTracker() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="overflow-x-auto pb-2 block sm:flex justify-center items-center">
+        <div className="overflow-x-auto pb-2 block sm:flex justify-center items-center gap-4">
           <TabsList className="inline-flex w-auto sm:min-w-0 min-w-full mb-4 md:mb-6 gap-1">
             <TabsTrigger value="players">Players</TabsTrigger>
             <TabsTrigger value="add-session">Add Session</TabsTrigger>
@@ -110,6 +111,11 @@ export function DebtTracker() {
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
             <TabsTrigger value="save-load">Save/Load</TabsTrigger>
           </TabsList>
+          <QuickSaveLoad
+            players={players}
+            sessions={sessions}
+            onLoadData={handleLoadData}
+          />
         </div>
 
         <TabsContent value="players">

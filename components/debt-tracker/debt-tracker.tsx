@@ -69,7 +69,7 @@ export function DebtTracker() {
             )
             return {
               ...player,
-              totalDebt: player.totalDebt - totalBuyIns + sessionEntry.cashOut,
+              netProfitLoss: player.netProfitLoss - sessionEntry.profit,
               sessionsPlayed: player.sessionsPlayed - 1,
               totalBuyIns: player.totalBuyIns - totalBuyIns,
               totalCashOuts: player.totalCashOuts - sessionEntry.cashOut,
@@ -85,10 +85,10 @@ export function DebtTracker() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">Poker Debt Tracker</h1>
+        <h1 className="text-3xl font-bold mb-2">Poker Session Tracker</h1>
         <p className="text-muted-foreground">
-          Track poker session debts and player statistics in Swedish Crowns
-          (SEK)
+          Track poker session profit/loss and player statistics in Swedish
+          Crowns (SEK)
         </p>
       </div>
 

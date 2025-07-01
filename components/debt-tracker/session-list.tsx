@@ -224,7 +224,7 @@ export function SessionList({ sessions, onDeleteSession }: SessionListProps) {
         <CardContent className="text-center py-8">
           <p className="text-muted-foreground mb-4">No sessions recorded yet</p>
           <p className="text-sm text-muted-foreground">
-            Add your first session to start tracking poker debts
+            Add your first session to start tracking poker profits and losses
           </p>
         </CardContent>
       </Card>

@@ -37,12 +37,12 @@ export interface Preset {
   isDefault: boolean
 }
 
-// Debt Tracker Types
+// Session Tracker Types
 export interface PokerPlayer {
   id: string
   name: string
   emoji: string
-  totalDebt: number // SEK - calculated as (buy-ins + rebuys) - cash-outs
+  netProfitLoss: number // SEK - calculated as cash-outs - (buy-ins + rebuys)
   sessionsPlayed: number
   totalBuyIns: number // SEK
   totalCashOuts: number // SEK

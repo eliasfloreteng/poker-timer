@@ -76,7 +76,7 @@ function PlayerForm({ player, onSave, onCancel }: PlayerFormProps) {
       id: player?.id || nanoid(),
       name: name.trim(),
       emoji,
-      totalDebt: player?.totalDebt || 0,
+      netProfitLoss: player?.netProfitLoss || 0,
       sessionsPlayed: player?.sessionsPlayed || 0,
       totalBuyIns: player?.totalBuyIns || 0,
       totalCashOuts: player?.totalCashOuts || 0,
@@ -199,7 +199,6 @@ export function PlayerProfiles({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {players.map((player) => {
             const profitLoss = calculatePlayerProfitLoss(player)
-            const isInDebt = player.totalDebt > 0
 
             return (
               <Card key={player.id} className="relative">
@@ -236,15 +235,17 @@ export function PlayerProfiles({
                 <CardContent className="space-y-3">
                   <div className="text-center">
                     <div className="text-2xl font-bold">
-                      {isInDebt ? "Owes " : ""}
                       <span
-                        className={isInDebt ? "text-red-600" : "text-green-600"}
+                        className={
+                          profitLoss >= 0 ? "text-green-600" : "text-red-600"
+                        }
                       >
-                        {formatSEK(Math.abs(player.totalDebt))}
+                        {profitLoss >= 0 ? "+" : ""}
+                        {formatSEK(profitLoss)}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {isInDebt ? "Total debt" : "Credit balance"}
+                      Net Profit/Loss
                     </p>
                   </div>
 

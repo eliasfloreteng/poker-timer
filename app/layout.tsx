@@ -3,9 +3,9 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
-  title: "Poker Timer & Debt Tracker",
+  title: "Poker Timer & Session Tracker",
   description:
-    "A comprehensive poker tournament timer with session debt tracking, player profiles, and statistics in Swedish Crowns (SEK).",
+    "A comprehensive poker tournament timer with session profit/loss tracking, player profiles, and statistics in Swedish Crowns (SEK).",
 }
 
 export default function RootLayout({

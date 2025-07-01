@@ -64,7 +64,7 @@ export function updatePlayerAfterSession(
 
   return {
     ...player,
-    totalDebt: player.totalDebt + totalBuyIns - sessionEntry.cashOut,
+    netProfitLoss: player.netProfitLoss + profit,
     sessionsPlayed: player.sessionsPlayed + 1,
     totalBuyIns: player.totalBuyIns + totalBuyIns,
     totalCashOuts: player.totalCashOuts + sessionEntry.cashOut,

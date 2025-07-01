@@ -131,7 +131,7 @@ export function Leaderboard({ players, sessions }: LeaderboardProps) {
                     <TableHead className="text-right">Profit/Loss</TableHead>
                     <TableHead className="text-right">Sessions</TableHead>
                     <TableHead className="text-right">Avg/Session</TableHead>
-                    <TableHead className="text-right">Total Debt</TableHead>
+                    <TableHead className="text-right">Net Loss</TableHead>
                     <TableHead className="text-right">Biggest Win</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -191,13 +191,13 @@ export function Leaderboard({ players, sessions }: LeaderboardProps) {
                         <TableCell className="text-right">
                           <span
                             className={`${
-                              player.totalDebt > 0
+                              player.netProfitLoss < 0
                                 ? "text-red-600"
                                 : "text-green-600"
                             }`}
                           >
-                            {player.totalDebt > 0
-                              ? formatSEK(player.totalDebt)
+                            {player.netProfitLoss < 0
+                              ? formatSEK(Math.abs(player.netProfitLoss))
                               : "-"}
                           </span>
                         </TableCell>

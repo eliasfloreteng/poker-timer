@@ -242,7 +242,7 @@ export function PokerTimer() {
             <TabsTrigger value="levels">Levels</TabsTrigger>
             <TabsTrigger value="players">Players</TabsTrigger>
             <TabsTrigger value="chips">Chips</TabsTrigger>
-            <TabsTrigger value="debt-tracker">Debt Tracker</TabsTrigger>
+            <TabsTrigger value="debt-tracker">Session Tracker</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
         </div>

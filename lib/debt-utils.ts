@@ -119,6 +119,67 @@ export function getLeaderboardData(
 }
 
 /**
+ * Get leaderboard data filtered by session type
+ */
+export function getLeaderboardDataByType(
+  players: PokerPlayer[],
+  sessions: PokerSession[],
+  sessionType: "cash" | "tournament"
+): Array<
+  PokerPlayer & {
+    profitLoss: number
+    biggestWin: number
+    sessionsPlayed: number
+  }
+> {
+  const filteredSessions = sessions.filter((s) => s.type === sessionType)
+
+  return players
+    .map((player) => {
+      // Calculate stats only from sessions of the specified type
+      const playerSessions = filteredSessions.filter((session) =>
+        session.players.some((p) => p.playerId === player.id)
+      )
+
+      let totalProfit = 0
+      let biggestWin = 0
+
+      playerSessions.forEach((session) => {
+        const playerEntry = session.players.find(
+          (p) => p.playerId === player.id
+        )
+        if (playerEntry) {
+          totalProfit += playerEntry.profit
+          if (playerEntry.profit > biggestWin) {
+            biggestWin = playerEntry.profit
+          }
+        }
+      })
+
+      return {
+        ...player,
+        profitLoss: totalProfit,
+        biggestWin,
+        sessionsPlayed: playerSessions.length,
+      }
+    })
+    .filter((player) => player.sessionsPlayed > 0) // Only include players who have played this session type
+    .sort((a, b) => b.profitLoss - a.profitLoss)
+}
+
+/**
+ * Get biggest session wins filtered by session type
+ */
+export function getBiggestSessionWinsByType(
+  sessions: PokerSession[],
+  sessionType: "cash" | "tournament",
+  limit: number = 10
+): Array<{ playerName: string; profit: number; date: string }> {
+  const filteredSessions = sessions.filter((s) => s.type === sessionType)
+  return getBiggestSessionWins(filteredSessions, limit)
+}
+
+/**
  * Get biggest session wins across all players
  */
 export function getBiggestSessionWins(

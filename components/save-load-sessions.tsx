@@ -281,6 +281,67 @@ export function SaveLoadSessions({
     }
   }
 
+  // Export to JSON file
+  const handleExportToFile = () => {
+    try {
+      const exportData = {
+        players,
+        sessions,
+        timestamp: new Date().toISOString(),
+        version: "1.0",
+      }
+
+      const dataStr = JSON.stringify(exportData, null, 2)
+      const dataBlob = new Blob([dataStr], { type: "application/json" })
+
+      const url = URL.createObjectURL(dataBlob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `poker-sessions-${
+        new Date().toISOString().split("T")[0]
+      }.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      alert("Sessions exported successfully!")
+    } catch (error) {
+      alert("Failed to export sessions")
+    }
+  }
+
+  // Import from JSON file
+  const handleImportFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        const importData = JSON.parse(content)
+
+        if (importData.players && importData.sessions) {
+          onLoadData(importData.players, importData.sessions)
+          alert(
+            `Successfully imported ${importData.players.length} players and ${importData.sessions.length} sessions!`
+          )
+        } else {
+          alert(
+            "Invalid file format. Please select a valid session backup file."
+          )
+        }
+      } catch (error) {
+        alert("Failed to read file. Please make sure it's a valid JSON file.")
+      }
+    }
+
+    reader.readAsText(file)
+    // Reset the input so the same file can be selected again
+    event.target.value = ""
+  }
+
   const totalSessions = sessions.length
   const totalPlayers = players.length
 
@@ -510,6 +571,57 @@ export function SaveLoadSessions({
               Current storage key: <code className="font-mono">{savedKey}</code>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileDown className="h-5 w-5" />
+            Local File Backup
+          </CardTitle>
+          <CardDescription>
+            Export your sessions to a local file or import from a previously
+            exported file. Files are saved in JSON format and work offline.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={handleExportToFile}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Export to File
+            </Button>
+
+            <div>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportFromFile}
+                style={{ display: "none" }}
+                id="file-import"
+              />
+              <Button
+                onClick={() => document.getElementById("file-import")?.click()}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <FileUp className="h-4 w-4" />
+                Import from File
+              </Button>
+            </div>
+          </div>
+
+          <div className="text-xs text-muted-foreground">
+            <p>
+              • Export creates a JSON file with all your players and sessions
+            </p>
+            <p>• Import replaces all current data with the imported data</p>
+            <p>• Files are compatible across different devices and browsers</p>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, TrendingUp, TrendingDown, Target } from "lucide-react"
+import { Trophy, TrendingUp, TrendingDown, Target, Coins } from "lucide-react"
 import type { PokerPlayer, PokerSession } from "@/types/poker-timer"
 import {
   formatSEK,
@@ -257,6 +257,7 @@ export function Leaderboard({ players, sessions }: LeaderboardProps) {
                           <TableHead className="w-[60px]">Rank</TableHead>
                           <TableHead>Player</TableHead>
                           <TableHead>Date</TableHead>
+                          <TableHead>Session Type</TableHead>
                           <TableHead className="text-right">
                             Win Amount
                           </TableHead>
@@ -274,6 +275,20 @@ export function Leaderboard({ players, sessions }: LeaderboardProps) {
                               {win.playerName}
                             </TableCell>
                             <TableCell>{win.date}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {win.sessionType === "tournament" ? (
+                                  <Trophy className="h-4 w-4 text-yellow-600" />
+                                ) : (
+                                  <Coins className="h-4 w-4 text-green-600" />
+                                )}
+                                <span className="text-sm">
+                                  {win.sessionType === "tournament"
+                                    ? "Tournament"
+                                    : "Cash Game"}
+                                </span>
+                              </div>
+                            </TableCell>
                             <TableCell className="text-right">
                               <span className="text-green-600 font-medium">
                                 +{formatSEK(win.profit)}

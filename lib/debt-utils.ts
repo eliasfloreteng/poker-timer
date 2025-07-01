@@ -174,7 +174,12 @@ export function getBiggestSessionWinsByType(
   sessions: PokerSession[],
   sessionType: "cash" | "tournament",
   limit: number = 10
-): Array<{ playerName: string; profit: number; date: string }> {
+): Array<{
+  playerName: string
+  profit: number
+  date: string
+  sessionType: "cash" | "tournament"
+}> {
   const filteredSessions = sessions.filter((s) => s.type === sessionType)
   return getBiggestSessionWins(filteredSessions, limit)
 }
@@ -185,9 +190,18 @@ export function getBiggestSessionWinsByType(
 export function getBiggestSessionWins(
   sessions: PokerSession[],
   limit: number = 10
-): Array<{ playerName: string; profit: number; date: string }> {
-  const allWins: Array<{ playerName: string; profit: number; date: string }> =
-    []
+): Array<{
+  playerName: string
+  profit: number
+  date: string
+  sessionType: "cash" | "tournament"
+}> {
+  const allWins: Array<{
+    playerName: string
+    profit: number
+    date: string
+    sessionType: "cash" | "tournament"
+  }> = []
 
   sessions.forEach((session) => {
     session.players.forEach((player) => {
@@ -196,6 +210,7 @@ export function getBiggestSessionWins(
           playerName: player.playerName,
           profit: player.profit,
           date: session.date,
+          sessionType: session.type,
         })
       }
     })

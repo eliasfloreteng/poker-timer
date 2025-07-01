@@ -36,3 +36,30 @@ export interface Preset {
   levels: Level[]
   isDefault: boolean
 }
+
+// Debt Tracker Types
+export interface PokerPlayer {
+  id: string
+  name: string
+  emoji: string
+  totalDebt: number // SEK - calculated as (buy-ins + rebuys) - cash-outs
+  sessionsPlayed: number
+  totalBuyIns: number // SEK
+  totalCashOuts: number // SEK
+}
+
+export interface SessionEntry {
+  playerId: string
+  playerName: string
+  buyIns: number[] // Array of buy-in amounts in SEK
+  cashOut: number // SEK
+  profit: number // Calculated: cashOut - sum(buyIns)
+}
+
+export interface PokerSession {
+  id: string
+  date: string
+  players: SessionEntry[]
+  totalCashOnTable: number // Auto-calculated
+  validated: boolean // Ensures cash-outs match total cash
+}

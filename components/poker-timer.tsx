@@ -21,6 +21,7 @@ import {
   VolumeX,
 } from "lucide-react"
 import { ChipCalculator } from "@/components/chip-calculator"
+import { DebtTracker } from "@/components/debt-tracker/debt-tracker"
 
 // NextLevels component to display upcoming levels
 interface NextLevelsProps {
@@ -241,6 +242,7 @@ export function PokerTimer() {
             <TabsTrigger value="levels">Levels</TabsTrigger>
             <TabsTrigger value="players">Players</TabsTrigger>
             <TabsTrigger value="chips">Chips</TabsTrigger>
+            <TabsTrigger value="debt-tracker">Debt Tracker</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
         </div>
@@ -324,6 +326,10 @@ export function PokerTimer() {
 
         <TabsContent value="chips">
           <ChipCalculator chipDenominations={settings.chipDenominations} />
+        </TabsContent>
+
+        <TabsContent value="debt-tracker">
+          <DebtTracker />
         </TabsContent>
 
         <TabsContent value="settings">

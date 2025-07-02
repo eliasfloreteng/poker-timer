@@ -60,6 +60,7 @@ interface PlayerSessionData {
 export function SessionForm({ players, onAddSession }: SessionFormProps) {
   const [date, setDate] = useState<Date>(new Date())
   const [sessionType, setSessionType] = useState<"cash" | "tournament">("cash")
+  const [commonExpenses, setCommonExpenses] = useState<number>(0)
   const [playerData, setPlayerData] = useState<PlayerSessionData[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -102,9 +103,11 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
       buyIns: p.buyIns,
       cashOut: p.cashOut,
       profit: calculateProfit(p.buyIns, p.cashOut),
-    }))
+    })),
+    commonExpenses
   )
-  const difference = totalCashOut - totalCashOnTable
+  const expectedCashOut = totalCashOnTable - commonExpenses
+  const difference = totalCashOut - expectedCashOut
 
   const togglePlayerInclusion = (playerId: string) => {
     setPlayerData((prev) =>
@@ -172,6 +175,7 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
         type: sessionType,
         players: sessionEntries,
         totalCashOnTable,
+        commonExpenses,
         validated: true,
       }
 
@@ -188,6 +192,7 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
       )
       setDate(new Date())
       setSessionType("cash")
+      setCommonExpenses(0)
     } finally {
       setIsSubmitting(false)
     }
@@ -216,8 +221,8 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Date and Session Type Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Date, Session Type, and Common Expenses */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Session Date</Label>
                 <Popover>
@@ -254,6 +259,26 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
                     <SelectItem value="tournament">Tournament</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="common-expenses">
+                  Common Expenses
+                  <span className="text-xs text-muted-foreground ml-1">
+                    (food, drinks, venue)
+                  </span>
+                </Label>
+                <Input
+                  id="common-expenses"
+                  type="number"
+                  value={commonExpenses}
+                  onChange={(e) =>
+                    setCommonExpenses(Number(e.target.value) || 0)
+                  }
+                  placeholder="Amount in SEK"
+                  min="0"
+                  step="0.01"
+                />
               </div>
             </div>
 
@@ -378,7 +403,7 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
             {includedPlayers.length > 0 && (
               <Card className="bg-muted/50">
                 <CardContent className="pt-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">
                         Total Cash on Table
@@ -388,7 +413,19 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Total Cash Out</p>
+                      <p className="text-muted-foreground">Common Expenses</p>
+                      <p className="font-medium text-lg">
+                        {formatSEK(commonExpenses)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Expected Cash Out</p>
+                      <p className="font-medium text-lg">
+                        {formatSEK(expectedCashOut)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Actual Cash Out</p>
                       <p className="font-medium text-lg">
                         {formatSEK(totalCashOut)}
                       </p>
@@ -401,18 +438,26 @@ export function SessionForm({ players, onAddSession }: SessionFormProps) {
                       <Alert>
                         <CheckCircle className="h-4 w-4" />
                         <AlertDescription>
-                          ✅ Cash outs match total cash on table
+                          ✅ Cash outs match expected amount (after common
+                          expenses)
                         </AlertDescription>
                       </Alert>
                     ) : (
                       <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          ⚠️ Cash outs don't match total cash on table
+                          ⚠️ Cash outs don't match expected amount
                           {difference !== 0 && (
                             <span className="block">
                               Difference: {difference > 0 ? "+" : ""}
                               {formatSEK(difference)}
+                            </span>
+                          )}
+                          {commonExpenses > 0 && (
+                            <span className="block text-xs mt-1">
+                              Expected: {formatSEK(totalCashOnTable)} -{" "}
+                              {formatSEK(commonExpenses)} ={" "}
+                              {formatSEK(expectedCashOut)}
                             </span>
                           )}
                         </AlertDescription>

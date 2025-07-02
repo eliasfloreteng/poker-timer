@@ -44,12 +44,16 @@ export function calculateTotalCashOut(sessionEntries: SessionEntry[]): number {
 }
 
 /**
- * Validate that cash outs match total cash on table
+ * Validate that cash outs match total cash on table minus common expenses
  */
-export function validateSession(sessionEntries: SessionEntry[]): boolean {
+export function validateSession(
+  sessionEntries: SessionEntry[],
+  commonExpenses: number = 0
+): boolean {
   const totalCashOnTable = calculateTotalCashOnTable(sessionEntries)
   const totalCashOut = calculateTotalCashOut(sessionEntries)
-  return Math.abs(totalCashOnTable - totalCashOut) < 0.01 // Allow for small rounding errors
+  const expectedCashOut = totalCashOnTable - commonExpenses
+  return Math.abs(expectedCashOut - totalCashOut) < 0.01 // Allow for small rounding errors
 }
 
 /**

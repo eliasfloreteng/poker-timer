@@ -62,5 +62,6 @@ export interface PokerSession {
   type: "cash" | "tournament" // Session type
   players: SessionEntry[]
   totalCashOnTable: number // Auto-calculated
+  commonExpenses: number // SEK - expenses to be deducted from handouts (e.g., food, drinks, venue)
   validated: boolean // Ensures cash-outs match total cash
 }

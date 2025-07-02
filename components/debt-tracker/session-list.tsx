@@ -201,7 +201,7 @@ function SessionCard({ session, onDelete }: SessionCardProps) {
               </div>
 
               {/* Session Summary */}
-              <div className="grid grid-cols-2 gap-4 text-sm border-t pt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border-t pt-4">
                 <div>
                   <p className="text-muted-foreground">Total Cash on Table</p>
                   <p className="font-medium">
@@ -209,7 +209,21 @@ function SessionCard({ session, onDelete }: SessionCardProps) {
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Total Cash Out</p>
+                  <p className="text-muted-foreground">Common Expenses</p>
+                  <p className="font-medium">
+                    {formatSEK(session.commonExpenses || 0)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Expected Cash Out</p>
+                  <p className="font-medium">
+                    {formatSEK(
+                      session.totalCashOnTable - (session.commonExpenses || 0)
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Actual Cash Out</p>
                   <p className="font-medium">
                     {formatSEK(
                       session.players.reduce((sum, p) => sum + p.cashOut, 0)

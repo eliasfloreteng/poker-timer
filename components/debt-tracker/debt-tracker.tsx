@@ -6,6 +6,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { PokerPlayer, PokerSession } from "@/types/poker-timer"
 import { PlayerProfiles } from "./player-profiles"
 import { SessionForm } from "./session-form"
+import { SessionEditForm } from "./session-edit-form"
 import { SessionList } from "./session-list"
 import { Leaderboard } from "./leaderboard"
 import { SaveLoadSessions } from "@/components/save-load-sessions"
@@ -25,6 +26,7 @@ export function DebtTracker() {
     "poker-debt-active-tab",
     "players"
   )
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
 
   const handleAddSession = useCallback(
     (newSession: PokerSession) => {
@@ -84,6 +86,74 @@ export function DebtTracker() {
     [sessions, setSessions, setPlayers]
   )
 
+  const handleEditSession = useCallback(
+    (sessionId: string) => {
+      setEditingSessionId(sessionId)
+      setActiveTab("sessions")
+    },
+    [setActiveTab]
+  )
+
+  const handleUpdateSession = useCallback(
+    (updatedSession: PokerSession) => {
+      const originalSession = sessions.find((s) => s.id === updatedSession.id)
+      if (!originalSession) return
+
+      // Update the session
+      setSessions((prev) =>
+        prev.map((s) => (s.id === updatedSession.id ? updatedSession : s))
+      )
+
+      // Revert original session effects and apply new session effects
+      setPlayers((prevPlayers) => {
+        return prevPlayers.map((player) => {
+          const originalEntry = originalSession.players.find(
+            (p) => p.playerId === player.id
+          )
+          const updatedEntry = updatedSession.players.find(
+            (p) => p.playerId === player.id
+          )
+
+          let updatedPlayer = { ...player }
+
+          // Revert original session effects
+          if (originalEntry) {
+            const originalTotalBuyIns = originalEntry.buyIns.reduce(
+              (sum, buyIn) => sum + buyIn,
+              0
+            )
+            updatedPlayer = {
+              ...updatedPlayer,
+              netProfitLoss: updatedPlayer.netProfitLoss - originalEntry.profit,
+              sessionsPlayed: updatedPlayer.sessionsPlayed - 1,
+              totalBuyIns: updatedPlayer.totalBuyIns - originalTotalBuyIns,
+              totalCashOuts:
+                updatedPlayer.totalCashOuts - originalEntry.cashOut,
+            }
+          }
+
+          // Apply updated session effects
+          if (updatedEntry) {
+            updatedPlayer = updatePlayerAfterSession(
+              updatedPlayer,
+              updatedEntry
+            )
+          }
+
+          return updatedPlayer
+        })
+      })
+
+      // Clear editing state
+      setEditingSessionId(null)
+    },
+    [sessions, setSessions, setPlayers]
+  )
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingSessionId(null)
+  }, [])
+
   const handleLoadData = useCallback(
     (loadedPlayers: PokerPlayer[], loadedSessions: PokerSession[]) => {
       setPlayers(loadedPlayers)
@@ -127,10 +197,20 @@ export function DebtTracker() {
         </TabsContent>
 
         <TabsContent value="sessions">
-          <SessionList
-            sessions={sessions}
-            onDeleteSession={handleDeleteSession}
-          />
+          {editingSessionId ? (
+            <SessionEditForm
+              players={players}
+              session={sessions.find((s) => s.id === editingSessionId)}
+              onSaveSession={handleUpdateSession}
+              onCancel={handleCancelEdit}
+            />
+          ) : (
+            <SessionList
+              sessions={sessions}
+              onDeleteSession={handleDeleteSession}
+              onEditSession={handleEditSession}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="leaderboard">

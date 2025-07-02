@@ -27,6 +27,7 @@ import {
   Calendar,
   Coins,
   Trophy,
+  Edit,
 } from "lucide-react"
 import type { PokerSession } from "@/types/poker-timer"
 import { formatSEK } from "@/lib/debt-utils"
@@ -34,14 +35,16 @@ import { formatSEK } from "@/lib/debt-utils"
 interface SessionListProps {
   sessions: PokerSession[]
   onDeleteSession: (sessionId: string) => void
+  onEditSession: (sessionId: string) => void
 }
 
 interface SessionCardProps {
   session: PokerSession
   onDelete: (sessionId: string) => void
+  onEdit: (sessionId: string) => void
 }
 
-function SessionCard({ session, onDelete }: SessionCardProps) {
+function SessionCard({ session, onDelete, onEdit }: SessionCardProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   // Calculate session statistics
@@ -87,12 +90,24 @@ function SessionCard({ session, onDelete }: SessionCardProps) {
                 <Badge variant="outline">
                   {winners.length} winner{winners.length !== 1 ? "s" : ""}
                 </Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEdit(session.id)
+                  }}
+                  title="Edit session"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={(e) => e.stopPropagation()}
+                      title="Delete session"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -239,7 +254,11 @@ function SessionCard({ session, onDelete }: SessionCardProps) {
   )
 }
 
-export function SessionList({ sessions, onDeleteSession }: SessionListProps) {
+export function SessionList({
+  sessions,
+  onDeleteSession,
+  onEditSession,
+}: SessionListProps) {
   // Sort sessions by date (most recent first)
   const sortedSessions = [...sessions].sort((a, b) => {
     // Parse the date strings (format: "January 1st, 2024")
@@ -276,6 +295,7 @@ export function SessionList({ sessions, onDeleteSession }: SessionListProps) {
             key={session.id}
             session={session}
             onDelete={onDeleteSession}
+            onEdit={onEditSession}
           />
         ))}
       </div>
